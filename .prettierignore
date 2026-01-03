@@ -1,0 +1,14 @@
+node_modules
+.next
+.out
+build
+dist
+.cache
+coverage
+.lockb
+bun.lockb
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+*.log
+*.md
