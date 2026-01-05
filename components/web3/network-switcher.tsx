@@ -11,7 +11,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Loader2, ChevronDown } from 'lucide-react'
-import { toast } from 'sonner'
+import { toastSuccess, toastError } from '@/lib/toast-error'
 
 export function NetworkSwitcher({ className = '' }: { className?: string }) {
     const chainId = useChainId()
@@ -22,10 +22,9 @@ export function NetworkSwitcher({ className = '' }: { className?: string }) {
         try {
             await switchChain({ chainId: targetChainId })
             const meta = getChainMetadata(targetChainId)
-            toast.success(`Switched to ${meta?.name || 'unknown network'}`)
-        } catch (error) {
-            console.error('Switch chain error:', error)
-            toast.error('Failed to switch network')
+            toastSuccess(`Switched to ${meta?.name || 'unknown network'}`)
+        } catch {
+            toastError('Failed to switch network')
         }
     }
     return (

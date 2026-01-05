@@ -32,9 +32,6 @@ export function useSwapUrlSync() {
         if (isUpdatingFromUrlRef.current) return
         const urlParams = parseSwapSearchParams(searchParams)
         const parsed = parseAndValidateSwapParams(chainId, urlParams)
-        if (parsed.errors.length > 0 && process.env.NODE_ENV === 'development') {
-            console.warn('[useSwapUrlSync] URL parameter errors:', parsed.errors)
-        }
         isUpdatingFromUrlRef.current = true
         setIsUpdatingFromUrl(true)
         if (parsed.tokenIn && (!tokenIn || parsed.tokenIn.address !== tokenIn.address)) {

@@ -17,7 +17,7 @@ import { useTokenApproval } from '@/hooks/useTokenApproval'
 import { useSwapUrlSync } from '@/hooks/useSwapUrlSync'
 import { calculateMinOutput } from '@/services/dex/uniswap-v3'
 import { formatBalance, formatTokenAmount } from '@/services/tokens'
-import { showErrorToast } from '@/lib/errors'
+import { toastError } from '@/lib/toast-error'
 import { KUB_TESTNET_TOKENS } from '@/lib/tokens'
 import { TokenSelect } from './token-select'
 import { ArrowDownUp } from 'lucide-react'
@@ -112,7 +112,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         }
         setIsLoading(isQuoteLoading)
         if (isError && error) {
-            showErrorToast(error, 'Failed to get quote')
+            toastError(error, 'Failed to get quote')
         }
     }, [quote, isQuoteLoading, isError, error, tokenOut, setQuote, setIsLoading])
     const displayAmountOut = useMemo(() => {
@@ -169,7 +169,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
     })
     useEffect(() => {
         if (simulationError) {
-            showErrorToast(simulationError, 'Simulation failed')
+            toastError(simulationError, 'Simulation failed')
         }
     }, [simulationError])
     useEffect(() => {
@@ -190,7 +190,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
     }, [isSuccess, swapHash, chainId, refetchBalanceIn, refetchBalanceOut])
     useEffect(() => {
         if (swapIsError && swapError) {
-            showErrorToast(swapError, 'Swap failed')
+            toastError(swapError, 'Swap failed')
         }
     }, [swapIsError, swapError])
     useEffect(() => {

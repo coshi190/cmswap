@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Copy, ExternalLink, LogOut } from 'lucide-react'
-import { toast } from 'sonner'
+import { toastSuccess, toastError } from '@/lib/toast-error'
 import { Separator } from '@/components/ui/separator'
 
 export function AccountDropdown({ children }: { children: React.ReactNode }) {
@@ -31,10 +31,9 @@ export function AccountDropdown({ children }: { children: React.ReactNode }) {
         if (address) {
             try {
                 await navigator.clipboard.writeText(address)
-                toast.success('Address copied')
-            } catch (error) {
-                console.error('Failed to copy address:', error)
-                toast.error('Failed to copy address')
+                toastSuccess('Address copied')
+            } catch {
+                toastError('Failed to copy address')
             }
         }
     }
@@ -46,7 +45,7 @@ export function AccountDropdown({ children }: { children: React.ReactNode }) {
     }
     const handleDisconnect = () => {
         disconnect()
-        toast.success('Wallet disconnected')
+        toastSuccess('Wallet disconnected')
     }
     const getInitials = (addr: string) => {
         return addr.slice(2, 4).toUpperCase()

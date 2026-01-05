@@ -9,6 +9,7 @@ import { getV3Config } from '@/lib/dex-config'
 import { useSwapStore } from '@/store/swap-store'
 import { UNISWAP_V3_SWAP_ROUTER_ABI } from '@/lib/abis/uniswap-v3-swap-router'
 import { buildSwapParams, buildMulticallSwapToNative } from '@/services/dex/uniswap-v3'
+import { toastError } from '@/lib/toast-error'
 import { isNativeToken } from '@/lib/wagmi'
 import { getWrapOperation, getWrappedNativeAddress } from '@/services/tokens'
 import { WETH9_ABI } from '@/lib/abis/weth9'
@@ -145,13 +146,11 @@ export function useUniV3SwapExecution({
     })
     const executeSwap = () => {
         if (!dexConfig && !wrapOperation) {
-            console.error('Swap execution failed: DEX config not found for chain', tokenIn.chainId)
+            toastError('DEX config not found for this chain')
             return
         }
         if (!simulationData?.request) {
-            console.error(
-                'Swap execution failed: Simulation data not available. Make sure simulation completed successfully.'
-            )
+            toastError('Swap simulation failed. Please try again.')
             return
         }
         swap({
