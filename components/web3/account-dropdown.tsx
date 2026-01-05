@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Copy, ExternalLink, LogOut } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { Separator } from '@/components/ui/separator'
 
 export function AccountDropdown({ children }: { children: React.ReactNode }) {

@@ -11,7 +11,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Loader2, ChevronDown } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 
 export function NetworkSwitcher({ className = '' }: { className?: string }) {
     const chainId = useChainId()
@@ -77,7 +77,9 @@ export function NetworkSwitcher({ className = '' }: { className?: string }) {
                                 </div>
                                 <div className="flex-1">
                                     <div className="font-medium">{meta.name}</div>
-                                    <div className="text-xs text-muted-foreground">{meta.symbol}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {meta.symbol}
+                                    </div>
                                 </div>
                                 {isActive && <div className="h-2 w-2 rounded-full bg-primary" />}
                             </DropdownMenuItem>

@@ -507,7 +507,7 @@ export function formatAddress(address: string, startChars = 6, endChars = 4): st
 - Tailwind CSS: 3.4.0
 - lucide-react: 0.562.0 (icons)
 - framer-motion: 11.15.0 (animations)
-- react-hot-toast: 2.5.0 (notifications)
+- sonner: 2.0.7 (notifications)
 
 **Development:**
 - ESLint: 9.0.0

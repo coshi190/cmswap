@@ -4,7 +4,7 @@ import { useConnect } from 'wagmi'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Wallet, Loader2 } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import type { ConnectModalProps } from '@/types/web3'
 
 const WALLET_NAMES: Record<string, string> = {
@@ -29,7 +29,9 @@ export function ConnectModal({ open, onOpenChange }: ConnectModalProps) {
                 typeof error === 'object' &&
                 error !== null &&
                 (('code' in error && error.code === 4001) ||
-                    ('message' in error && typeof error.message === 'string' && error.message.includes('User rejected')))
+                    ('message' in error &&
+                        typeof error.message === 'string' &&
+                        error.message.includes('User rejected')))
             if (isUserRejection) {
                 toast.error('Connection rejected by user')
             } else {
@@ -40,7 +42,10 @@ export function ConnectModal({ open, onOpenChange }: ConnectModalProps) {
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-md border-border/50" aria-describedby="wallet-connect-description">
+            <DialogContent
+                className="sm:max-w-md bg-card/95 backdrop-blur-md border-border/50"
+                aria-describedby="wallet-connect-description"
+            >
                 <DialogHeader>
                     <DialogTitle className="text-xl">Connect Wallet</DialogTitle>
                 </DialogHeader>
