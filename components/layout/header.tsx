@@ -19,8 +19,10 @@ export function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const navLinks = [
         { href: '/swap', label: 'Swap' },
+        { href: '/earn', label: 'Earn' },
         { href: '/bridge', label: 'Bridge' },
         { href: '/launchpad', label: 'Launchpad' },
+        { href: '/points', label: 'Points' },
     ]
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -36,7 +38,10 @@ export function Header() {
                         {navLinks.map((link) => (
                             <NavigationMenuItem key={link.href}>
                                 <NavigationMenuLink asChild>
-                                    <Link href={link.href} className={buttonVariants({ variant: 'ghost' })}>
+                                    <Link
+                                        href={link.href}
+                                        className={buttonVariants({ variant: 'ghost' })}
+                                    >
                                         {link.label}
                                     </Link>
                                 </NavigationMenuLink>

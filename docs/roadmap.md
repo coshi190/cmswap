@@ -7,12 +7,15 @@ Implementation phases and TODO list for cmswap development.
 **Current Phase**: Phase 2 - Swap Feature (In Progress 🚧)
 
 - [x] Phase 1: Foundation ✅
-- [ ] Phase 2: Swap Feature 🚧 (50% complete)
-  - [x] Multi-DEX config abstraction
-  - [x] Uniswap V3 integration
-  - [x] Swap UI with token selection
-  - [ ] Testing on KUB testnet
-  - [ ] Multi-DEX expansion
+- [ ] Phase 2: Swap Feature 🚧 (65% complete)
+  - [x] KUB Testnet integration
+  - [ ] JB Chain multi-DEX expansion
+- [ ] Phase 3: Earn Feature 🆕
+- [ ] Phase 4: Bridge Feature
+- [ ] Phase 5: Launchpad Feature
+- [ ] Phase 6: Polish & Optimization
+- [ ] Phase 7: Points Feature 🆕
+- [ ] Phase 8: Advanced Features (Post-MVP)
 
 ---
 
@@ -39,38 +42,6 @@ Implementation phases and TODO list for cmswap development.
 - [x] Set up dev tools (ESLint, Prettier, Husky)
 - [x] Create project documentation
 - [x] Configure Vercel deployment
-
-### Files Created
-
-```
-cmswap/
-├── app/
-│   ├── layout.tsx              ✅ Root layout
-│   ├── page.tsx                ✅ Landing page
-│   └── providers.tsx           ✅ App providers
-├── components/
-│   ├── ui/
-│   │   └── button.tsx          ✅ shadcn button (with xl variant)
-│   └── landing/
-│       ├── hero.tsx            ✅
-│       ├── features.tsx        ✅
-│       chains.tsx              ✅
-│       ├── cta.tsx             ✅
-│       └── footer.tsx          ✅
-├── lib/
-│   ├── wagmi.ts                ✅ wagmi config + chains
-│   └── utils.ts                ✅ Utilities
-├── docs/
-│   ├── README.md               ✅
-│   ├── architecture.md         ✅
-│   ├── tech-stack.md           ✅
-│   └── roadmap.md              ✅ This file
-├── services/                   ✅ Directory ready
-├── hooks/                      ✅ Directory ready
-├── store/                      ✅ Directory ready
-├── types/                      ✅ Directory ready
-└── Configuration files         ✅ All set up
-```
 
 ---
 
@@ -112,6 +83,11 @@ cmswap/
   - [x] Pending state
   - [x] Success confirmation
   - [x] Error handling (Sonner toasts)
+- [x] KUB Testnet Testing
+  - [x] Swap transactions on cmswap DEX
+  - [x] Token approval flow
+  - [x] Slippage/deadline settings
+  - [x] Error handling validation
 
 ### Pending Features
 
@@ -122,6 +98,113 @@ cmswap/
   - [ ] Display price impact
   - [ ] Display gas estimate
 - [ ] Transaction history
+
+### JB Chain Multi-DEX Expansion 🆕
+
+**Target Chain**: JB Chain (JBC)
+**Goal**: Integrate 3 DEX protocols for price comparison and aggregation
+
+**JB Chain DEXs:**
+
+| DEX | Protocol | Status | Contract Addresses |
+|-----|----------|--------|-------------------|
+| cmswap | Uniswap V3 fork | Pending | Factory: `0x______`<br>QuoterV2: `0x______`<br>SwapRouter: `0x______` |
+| jibswap | Uniswap V2 fork | Pending | Factory: `0x______`<br>Router: `0x______` |
+| commudao | Custom AMM | Pending | Router: `0x______` |
+
+**Integration Sequence (One-by-One):**
+1. **cmswap V3** (first - extend existing V3 service to JBC)
+2. **jibswap V2** (second - requires V2 service layer)
+3. **commudao Custom** (third - requires custom service implementation)
+
+**Implementation Tasks:**
+
+**Step 1: cmswap V3 on JBC**
+- [ ] Add V3 config for JB chain in `dex-config.ts`
+  ```typescript
+  [jbc.id]: {
+      [ProtocolType.V3]: {
+          factory: '0x______',     // TODO: Fill in
+          quoter: '0x______',       // TODO: Fill in
+          swapRouter: '0x______',   // TODO: Fill in
+          feeTiers: [100, 500, 3000, 10000],
+          defaultFeeTier: 3000
+      }
+  }
+  ```
+- [ ] Test quote and swap on JBC
+- [ ] Verify all fee tiers have liquidity
+
+**Step 2: jibswap V2 Integration**
+- [ ] Create `services/dex/uniswap-v2.ts` service
+- [ ] Add V2 ABIs to `lib/abis/`:
+  - `uniswap-v2-router.ts` - Router ABI
+  - `uniswap-v2-factory.ts` - Factory ABI
+  - `uniswap-v2-pair.ts` - Pair ABI (for reserves)
+- [ ] Create `hooks/useUniV2Quote.ts`
+  - Fetch quote via `getAmountsOut` call
+  - Handle path construction
+- [ ] Create `hooks/useUniV2SwapExecution.ts`
+  - Prepare swap transaction data
+  - Execute via Router
+- [ ] Add jibswap to `DEX_CONFIGS_REGISTRY` in `dex-config.ts`
+  ```typescript
+  jibswap: {
+      dexId: 'jibswap',
+      defaultProtocol: ProtocolType.V2,
+      priority: 2,
+      protocols: {
+          [jbc.id]: {
+              [ProtocolType.V2]: {
+                  factory: '0x______',   // TODO: Fill in
+                  router: '0x______',     // TODO: Fill in
+                  wnative: '0x______'     // TODO: WJBC address
+              }
+          }
+      }
+  }
+  ```
+- [ ] Add jibswap to `DEX_REGISTRY` in `types/dex.ts`
+- [ ] Test quote and swap on JBC
+
+**Step 3: commudao Custom AMM Integration**
+- [ ] Research commudao AMM implementation details
+- [ ] Create `services/dex/commudao.ts` custom service
+- [ ] Add commudao ABIs to `lib/abis/`
+- [ ] Create `hooks/useCommudaoQuote.ts`
+- [ ] Create `hooks/useCommudaoSwapExecution.ts`
+- [ ] Add to `DEX_CONFIGS_REGISTRY` (may need new config type)
+- [ ] Add to `DEX_REGISTRY` in `types/dex.ts`
+- [ ] Test quote and swap on JBC
+
+**Step 4: Multi-DEX Aggregation**
+- [ ] Parallel quote fetching from all 3 DEXs
+- [ ] Price comparison logic (best output amount)
+- [ ] Best price selection with DEX label
+- [ ] UI to show alternative DEX quotes
+- [ ] Gas cost comparison per DEX
+- [ ] Transaction history per DEX
+
+**Additional Setup Tasks:**
+- [ ] Add JB Chain token list to `lib/tokens.ts`
+  ```typescript
+  export const JB_CHAIN_TOKENS: Token[] = [
+      {
+          address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+          symbol: 'JBC',
+          name: 'JB Chain',
+          decimals: 18,
+          chainId: jbc.id
+      },
+      // TODO: Add more JBC tokens
+  ]
+
+  export const TOKEN_LISTS: Record<number, Token[]> = {
+      [kubTestnet.id]: KUB_TESTNET_TOKENS,
+      [jbc.id]: JB_CHAIN_TOKENS  // Add this
+  }
+  ```
+- [ ] Verify `/public/chains/jbchain.png` icon exists
 
 ### DEX Integration
 
@@ -155,10 +238,13 @@ lib/
 │   ├── erc20.ts                    ✅ ERC20 ABI
 │   ├── uniswap-v3-quoter.ts        ✅ Uniswap V3 QuoterV2 ABI
 │   ├── uniswap-v3-router.ts        ✅ Uniswap V3 SwapRouter ABI
+│   ├── uniswap-v2-router.ts        🆕 Uniswap V2 Router ABI (jibswap)
+│   ├── uniswap-v2-factory.ts       🆕 Uniswap V2 Factory ABI
+│   ├── uniswap-v2-pair.ts          🆕 Uniswap V2 Pair ABI
 │   └── index.ts                    ✅ ABIs export
 │
 ├── dex-config.ts                   ✅ Multi-DEX protocol abstraction
-└── tokens.ts                       ✅ KUB testnet token list
+└── tokens.ts                       ✅ KUB testnet token list (+ JB Chain)
 
 components/swap/
 ├── swap-card.tsx                   ✅ Main swap interface
@@ -169,13 +255,19 @@ components/swap/
 services/
 ├── tokens.ts                       ✅ Token operations
 └── dex/
-    └── uniswap-v3.ts               ✅ Uniswap V3 protocol service
+    ├── uniswap-v3.ts               ✅ Uniswap V3 protocol service
+    ├── uniswap-v2.ts               🆕 Uniswap V2 protocol service (jibswap)
+    └── commudao.ts                 🆕 Commudao custom AMM service
 
 hooks/
 ├── useTokenBalance.ts              ✅ Token balance (native/ERC20)
 ├── useTokenApproval.ts             ✅ Generic token approval (any protocol)
 ├── useUniV3Quote.ts                ✅ Uniswap V3 quote fetching
 ├── useUniV3SwapExecution.ts        ✅ Uniswap V3 swap execution
+├── useUniV2Quote.ts                🆕 Uniswap V2 quote fetching (jibswap)
+├── useUniV2SwapExecution.ts        🆕 Uniswap V2 swap execution
+├── useCommudaoQuote.ts             🆕 Commudao quote fetching
+├── useCommudaoSwapExecution.ts     🆕 Commudao swap execution
 └── useDebounce.ts                  ✅ Debounce utility
 
 store/
@@ -215,8 +307,31 @@ app/
   - [x] Build swap-settings (slippage, deadline) - Complete (settings-dialog.tsx with UI)
 - [x] Create swap page at `app/swap/page.tsx` ✅
 - [x] Add swap route to navigation ✅
-- [ ] Test on KUB testnet with faucet tokens - Pending
+- [x] Test on KUB testnet with faucet tokens ✅
 - [x] Add error handling and user feedback (Sonner toasts) ✅
+
+### JB Chain Expansion Tasks 🆕
+
+- [ ] Research and document JB Chain DEX ecosystem
+  - [ ] Verify cmswap V3 contract addresses on JBC
+  - [ ] Verify jibswap V2 contract addresses on JBC
+  - [ ] Research commudao AMM implementation
+  - [ ] Document JB Chain token list
+- [ ] Implement cmswap V3 on JBC
+  - [ ] Add V3 config for JBC in dex-config.ts
+  - [ ] Test quote and swap on JBC
+- [ ] Implement jibswap V2 integration
+  - [ ] Create V2 service and hooks
+  - [ ] Add V2 ABIs
+  - [ ] Test quote and swap on JBC
+- [ ] Implement commudao custom AMM integration
+  - [ ] Create custom service and hooks
+  - [ ] Add commudao ABIs
+  - [ ] Test quote and swap on JBC
+- [ ] Implement multi-DEX aggregation
+  - [ ] Parallel quote fetching
+  - [ ] Price comparison UI
+  - [ ] Gas cost comparison
 
 ---
 
@@ -294,7 +409,118 @@ interface AggregatorConfig {
 
 ---
 
-## Phase 3: Bridge Feature
+## Phase 3: Earn Feature 🆕
+
+**Duration**: 2-3 weeks
+**Goal**: Implement staking, liquidity mining, and yield farming
+
+### Features
+
+- [ ] Staking interface
+  - [ ] Single-token staking (stake native tokens)
+  - [ ] LP token staking (stake liquidity positions)
+  - [ ] Flexible vs fixed staking periods
+  - [ ] Real-time APY calculation
+  - [ ] Rewards tracker
+
+- [ ] Pool management
+  - [ ] Pool list with APY/TVL display
+  - [ ] Pool creation interface
+  - [ ] Reward distribution setup
+  - [ ] Pool end date configuration
+
+- [ ] Rewards system
+  - [ ] Claim rewards button
+  - [ ] Compound rewards option
+  - [ ] Reward vesting schedule
+  - [ ] Emergency withdraw
+
+- [ ] Position tracking
+  - [ ] My staking positions
+  - [ ] Historical rewards
+  - [ ] Unclaimed rewards display
+  - [ ] Position value chart
+
+### Smart Contracts
+
+**Foundry Contracts:**
+
+```solidity
+// contracts/src/
+├── StakingPool.sol           # Base staking pool
+├── LiquidityMining.sol       # LP token staking
+├── RewardDistributor.sol     # Reward distribution
+└── interfaces/
+    └── IStaking.sol          # Staking interface
+```
+
+### Files to Create
+
+```
+components/earn/
+├── earn-page.tsx             # Main earn page layout
+├── pool-card.tsx             # Individual pool display card
+├── pool-list.tsx             # List of all pools
+├── stake-dialog.tsx          # Stake/unstake modal
+├── claim-rewards.tsx         # Claim rewards component
+└── position-tracker.tsx      # User's positions
+
+contracts/
+├── src/
+│   ├── StakingPool.sol
+│   ├── LiquidityMining.sol
+│   └── RewardDistributor.sol
+├── script/
+│   └── DeployStaking.s.sol
+└── test/
+    └── StakingTest.t.sol
+
+services/
+└── staking.ts                # Staking service layer
+
+hooks/
+├── useStake.ts               # Staking logic
+├── useUnstake.ts             # Unstaking logic
+├── useClaimRewards.ts        # Claim rewards
+├── usePools.ts               # Pool data fetching
+└── useUserPositions.ts       # User position data
+
+types/
+└── earn.ts                   # Earn feature types
+
+store/
+└── earn-store.ts             # Earn state management
+
+app/
+└── earn/
+    └── page.tsx              # Earn page
+```
+
+### API Integration
+
+**Staking Calculations:**
+```typescript
+// APY Calculation
+apy = (rewardsPerYear / totalStaked) * 100
+
+// Reward Calculation
+pendingRewards = userShares * rewardsPerShare - userRewardDebt
+```
+
+### TODO
+
+- [ ] Create Foundry staking contracts
+- [ ] Build pool-card component
+- [ ] Build stake-dialog component
+- [ ] Implement APY calculation
+- [ ] Integrate TanStack Query for pool data
+- [ ] Add transaction tracking
+- [ ] Test on KUB testnet
+- [ ] Security audit (before mainnet)
+
+---
+
+## Phase 4: Bridge Feature
 
 **Duration**: 1-2 weeks
 **Goal**: Implement cross-chain token bridging
@@ -367,7 +593,7 @@ types/
 
 ---
 
-## Phase 4: Launchpad Feature
+## Phase 5: Launchpad Feature
 
 **Duration**: 2 weeks
 **Goal**: Implement memecoin launch platform
@@ -447,7 +673,7 @@ types/
 
 ---
 
-## Phase 5: Polish & Optimization
+## Phase 6: Polish & Optimization
 
 **Duration**: 1-2 weeks
 **Goal**: Production-ready features
@@ -484,7 +710,116 @@ types/
 
 ---
 
-## Phase 6: Advanced Features (Post-MVP)
+## Phase 7: Points Feature 🆕
+
+**Duration**: 1-2 weeks
+**Goal**: Implement user rewards, referral system, and gamification
+
+### Features
+
+- [ ] Points tracking
+  - [ ] Points balance display
+  - [ ] Points history (earn/spend)
+  - [ ] Points earning activities
+  - [ ] Real-time points update
+
+- [ ] Referral system
+  - [ ] Generate referral code
+  - [ ] Referral link sharing
+  - [ ] Track referred users
+  - [ ] Referral rewards calculation
+
+- [ ] Leaderboard
+  - [ ] Global ranking display
+  - [ ] Weekly/monthly leaderboard
+  - [ ] User ranking highlight
+  - [ ] Top users showcase
+
+- [ ] Rewards redemption
+  - [ ] Points to token swap
+  - [ ] Exclusive features unlock
+  - [ ] Badge/NFT rewards
+  - [ ] Tier-based benefits
+
+- [ ] Quest system
+  - [ ] Daily/weekly quests
+  - [ ] Quest completion tracking
+  - [ ] Quest rewards
+  - [ ] Achievement badges
+
+### Files to Create
+
+```
+components/points/
+├── points-page.tsx            # Main points page
+├── points-balance.tsx         # Points display card
+├── referral-card.tsx          # Referral link & stats
+├── leaderboard.tsx            # Ranking table
+├── quest-list.tsx             # Available quests
+├── achievement-badge.tsx      # Badge display
+└── history-list.tsx           # Points history
+
+services/
+└── points.ts                  # Points service (API/backend)
+
+hooks/
+├── usePoints.ts               # Points balance & history
+├── useReferral.ts             # Referral system
+├── useLeaderboard.ts          # Leaderboard data
+└── useQuests.ts               # Quest management
+
+types/
+└── points.ts                  # Points feature types
+
+store/
+└── points-store.ts            # Points state management
+
+app/
+└── points/
+    └── page.tsx               # Points page
+```
+
+### Backend Requirements
+
+**API Endpoints:**
+```typescript
+GET  /api/points/balance       # Get user points
+GET  /api/points/history       # Get points history
+POST /api/points/earn          # Earn points from activity
+POST /api/points/spend         # Spend/redeem points
+GET  /api/referral/code        # Get referral code
+POST /api/referral/claim       # Claim referral bonus
+GET  /api/leaderboard          # Get leaderboard
+GET  /api/quests               # Get available quests
+POST /api/quests/complete      # Complete quest
+```
+
+**Points Earning Activities:**
+| Activity | Points | Frequency |
+|----------|--------|-----------|
+| Swap transaction | +10 | per swap |
+| Provide liquidity | +50 | per pool |
+| Stake tokens | +25 | per stake |
+| Daily login | +5 | daily |
+| Refer a user | +100 | per referral |
+| Complete quest | +20-100 | per quest |
+
+### TODO
+
+- [ ] Set up backend API for points
+- [ ] Create database schema for points/referrals
+- [ ] Build points-balance component
+- [ ] Build referral-card component
+- [ ] Implement leaderboard with real-time updates
+- [ ] Create quest system
+- [ ] Add achievement badges
+- [ ] Integrate with existing features (swap, stake, etc.)
+- [ ] Test points earning/redemption
+- [ ] Deploy to production
+
+---
+
+## Phase 8: Advanced Features (Post-MVP)
 
 ### Additional Chains
 
@@ -567,6 +902,12 @@ types/
 
 **Phase 4 requires**: Phase 3 complete
 
+**Phase 5 requires**: Phase 4 complete
+
+**Phase 6 requires**: Phase 5 complete
+
+**Phase 7 requires**: Phase 6 complete
+
 ---
 
 ## Estimated Timeline
@@ -575,10 +916,13 @@ types/
 |-------|----------|------------|-------------|
 | Phase 1 | ✅ Complete | - | ✅ Complete |
 | Phase 2 | 1-2 weeks | TBD | TBD |
-| Phase 3 | 1-2 weeks | TBD | TBD |
-| Phase 4 | 2 weeks | TBD | TBD |
-| Phase 5 | 1-2 weeks | TBD | TBD |
-| **MVP Total** | **5-8 weeks** | **TBD** | **TBD** |
+| Phase 3 | 2-3 weeks | TBD | TBD | 🆕 Earn
+| Phase 4 | 1-2 weeks | TBD | TBD |
+| Phase 5 | 2 weeks | TBD | TBD |
+| Phase 6 | 1-2 weeks | TBD | TBD |
+| Phase 7 | 1-2 weeks | TBD | TBD | 🆕 Points
+| **MVP Total** | **8-11 weeks** | **TBD** | **TBD** |
+| Phase 8 | Post-MVP | TBD | TBD |
 
 ---
 
