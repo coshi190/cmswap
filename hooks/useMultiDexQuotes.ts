@@ -5,7 +5,13 @@ import { useChainId } from 'wagmi'
 import type { Token } from '@/types/tokens'
 import type { DEXType } from '@/types/dex'
 import type { DexQuote } from '@/types/swap'
-import { getSupportedDexs, ProtocolType } from '@/lib/dex-config'
+import {
+    getSupportedDexs,
+    getDexConfig,
+    isV2Config,
+    isV3Config,
+    ProtocolType,
+} from '@/lib/dex-config'
 import { useUniV3Quote } from './useUniV3Quote'
 import { useUniV2Quote } from './useUniV2Quote'
 
@@ -31,60 +37,93 @@ export function useMultiDexQuotes({
 }: UseMultiDexQuotesParams): UseMultiDexQuotesResult {
     const chainId = useChainId()
     const supportedDexs = getSupportedDexs(chainId)
-    const cmswapQuote = useUniV3Quote({
+    const v3Dexs = supportedDexs.filter((dexId) => {
+        const config = getDexConfig(chainId, dexId)
+        return config && isV3Config(config)
+    })
+    const v2Dexs = supportedDexs.filter((dexId) => {
+        const config = getDexConfig(chainId, dexId)
+        return config && isV2Config(config)
+    })
+    const v3Result = useUniV3Quote({
         tokenIn,
         tokenOut,
         amountIn,
-        enabled: enabled && supportedDexs.includes('cmswap'),
-        dexId: 'cmswap',
+        enabled,
+        dexId: v3Dexs.length > 0 ? v3Dexs : undefined,
     })
-    const jibswapQuote = useUniV2Quote({
+    const v2Result = useUniV2Quote({
         tokenIn,
         tokenOut,
         amountIn,
-        enabled: enabled && supportedDexs.includes('jibswap'),
-        dexId: 'jibswap',
+        enabled,
+        dexId: v2Dexs.length > 0 ? v2Dexs : undefined,
     })
-
-    // commudao will be added when implemented
-    // const commudaoQuote = useCommudaoQuote({...})
-
     const quotes: Record<DEXType, DexQuote> = useMemo(() => {
         const results: Record<DEXType, DexQuote> = {}
-        if (supportedDexs.includes('cmswap')) {
-            results['cmswap'] = {
-                dexId: 'cmswap',
-                quote: cmswapQuote.quote,
-                isLoading: cmswapQuote.isLoading,
-                isError: cmswapQuote.isError,
-                error: cmswapQuote.error,
+        for (const dexId of v3Dexs) {
+            results[dexId] = {
+                dexId,
+                quote: null,
+                isLoading: false,
+                isError: false,
+                error: null,
                 protocolType: ProtocolType.V3,
-                fee: cmswapQuote.fee,
             }
         }
-        if (supportedDexs.includes('jibswap')) {
-            results['jibswap'] = {
-                dexId: 'jibswap',
-                quote: jibswapQuote.quote,
-                isLoading: jibswapQuote.isLoading,
-                isError: jibswapQuote.isError,
-                error: jibswapQuote.error,
+        for (const dexId of v2Dexs) {
+            results[dexId] = {
+                dexId,
+                quote: null,
+                isLoading: false,
+                isError: false,
+                error: null,
                 protocolType: ProtocolType.V2,
             }
         }
-
-        // Add commudao result (when implemented)
-        // if (supportedDexs.includes('commudao')) {
-        //     results['commudao'] = {...}
-        // }
-
+        if (v3Result.primaryDexId && results[v3Result.primaryDexId]) {
+            results[v3Result.primaryDexId] = {
+                dexId: v3Result.primaryDexId,
+                quote: v3Result.quote,
+                isLoading: v3Result.isLoading,
+                isError: v3Result.isError,
+                error: v3Result.error,
+                protocolType: ProtocolType.V3,
+                fee: v3Result.fee ?? undefined,
+            }
+        }
+        if (v2Result.primaryDexId && results[v2Result.primaryDexId]) {
+            results[v2Result.primaryDexId] = {
+                dexId: v2Result.primaryDexId,
+                quote: v2Result.quote,
+                isLoading: v2Result.isLoading,
+                isError: v2Result.isError,
+                error: v2Result.error,
+                protocolType: ProtocolType.V2,
+            }
+        }
         return results
-    }, [chainId, supportedDexs, cmswapQuote, jibswapQuote])
+    }, [
+        v3Dexs,
+        v2Dexs,
+        v3Result.primaryDexId,
+        v3Result.quote,
+        v3Result.isLoading,
+        v3Result.isError,
+        v3Result.error,
+        v3Result.fee,
+        v2Result.primaryDexId,
+        v2Result.quote,
+        v2Result.isLoading,
+        v2Result.isError,
+        v2Result.error,
+    ])
     const bestQuoteDex = useMemo(() => {
         const validQuotes = Object.values(quotes).filter(
             (q) => q.quote && !q.isLoading && !q.isError
         )
         if (validQuotes.length === 0) return null
+
         const best = validQuotes.sort((a, b) => {
             if (!a.quote || !b.quote) return 0
             return Number(b.quote.amountOut - a.quote.amountOut)

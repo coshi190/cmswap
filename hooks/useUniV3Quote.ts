@@ -6,20 +6,26 @@ import type { Address } from 'viem'
 import type { Token } from '@/types/tokens'
 import type { QuoteResult } from '@/types/swap'
 import type { DEXType } from '@/types/dex'
-import { getV3Config, FEE_TIERS, DEFAULT_FEE_TIER } from '@/lib/dex-config'
-import { useSwapStore } from '@/store/swap-store'
+import {
+    getV3Config,
+    FEE_TIERS,
+    getDexsByProtocol,
+    isV3Config,
+    getDexConfig,
+} from '@/lib/dex-config'
 import { UNISWAP_V3_QUOTER_V2_ABI } from '@/lib/abis/uniswap-v3-quoter'
 import { UNISWAP_V3_FACTORY_ABI } from '@/lib/abis/uniswap-v3-factory'
 import { UNISWAP_V3_POOL_ABI } from '@/lib/abis/uniswap-v3-pool'
 import { buildQuoteParams } from '@/services/dex/uniswap-v3'
 import { isSameToken, getSwapAddress, getWrapOperation } from '@/services/tokens'
+import { ProtocolType } from '@/lib/dex-config'
 
 export interface UseUniV3QuoteParams {
     tokenIn: Token | null
     tokenOut: Token | null
     amountIn: bigint
     enabled?: boolean
-    dexId?: DEXType
+    dexId?: DEXType | DEXType[]
 }
 
 export interface UseUniV3QuoteResult {
@@ -27,12 +33,11 @@ export interface UseUniV3QuoteResult {
     isLoading: boolean
     isError: boolean
     error: Error | null
-    fee: number
-    isWrapUnwrap: boolean
-    wrapOperation: 'wrap' | 'unwrap' | null
+    fee: number | null
+    primaryDexId: DEXType | null
 }
 
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000' as Address
 
 export function useUniV3Quote({
     tokenIn,
@@ -41,27 +46,47 @@ export function useUniV3Quote({
     enabled = true,
     dexId,
 }: UseUniV3QuoteParams): UseUniV3QuoteResult {
-    const { selectedDex: storeSelectedDex } = useSwapStore()
-    const effectiveDexId = dexId ?? storeSelectedDex
-    const dexConfig = tokenIn ? getV3Config(tokenIn.chainId, effectiveDexId) : null
     const chainId = tokenIn?.chainId ?? 1
+    const requestedDexIds = useMemo(() => {
+        if (!tokenIn) return []
+        if (!dexId) {
+            return getDexsByProtocol(chainId, ProtocolType.V3)
+        }
+        const ids = Array.isArray(dexId) ? dexId : [dexId]
+        return ids.filter((id) => {
+            const config = getDexConfig(chainId, id)
+            return config && isV3Config(config)
+        })
+    }, [dexId, tokenIn, chainId])
     const wrapOperation = useMemo(() => {
         return getWrapOperation(tokenIn, tokenOut)
     }, [tokenIn, tokenOut])
-    const tokenInAddress = tokenIn
-        ? getSwapAddress(tokenIn.address as Address, chainId)
-        : ZERO_ADDRESS
-    const tokenOutAddress = tokenOut
-        ? getSwapAddress(tokenOut.address as Address, chainId)
-        : ZERO_ADDRESS
-    const baseQueryEnabled = !!tokenIn && !!tokenOut && !!dexConfig
+    const tokenInAddress = useMemo(() => {
+        if (!tokenIn) return ZERO_ADDRESS
+        return getSwapAddress(tokenIn.address as Address, chainId)
+    }, [tokenIn, chainId])
+    const tokenOutAddress = useMemo(() => {
+        if (!tokenOut) return ZERO_ADDRESS
+        return getSwapAddress(tokenOut.address as Address, chainId)
+    }, [tokenOut, chainId])
+    const primaryDexId = requestedDexIds[0]
+    const dexConfig = primaryDexId ? getV3Config(chainId, primaryDexId) : null
+    const isReadyForQuote =
+        enabled &&
+        !!tokenIn &&
+        !!tokenOut &&
+        amountIn > 0n &&
+        !!dexConfig &&
+        tokenIn.chainId === tokenOut.chainId &&
+        !isSameToken(tokenIn, tokenOut) &&
+        !wrapOperation
     const poolStable = useReadContract({
         address: dexConfig?.factory,
         abi: UNISWAP_V3_FACTORY_ABI,
         functionName: 'getPool',
         args: [tokenInAddress, tokenOutAddress, FEE_TIERS.STABLE],
         chainId,
-        query: { enabled: baseQueryEnabled, staleTime: 60_000 },
+        query: { enabled: isReadyForQuote, staleTime: 60_000 },
     })
     const poolLow = useReadContract({
         address: dexConfig?.factory,
@@ -69,7 +94,7 @@ export function useUniV3Quote({
         functionName: 'getPool',
         args: [tokenInAddress, tokenOutAddress, FEE_TIERS.LOW],
         chainId,
-        query: { enabled: baseQueryEnabled, staleTime: 60_000 },
+        query: { enabled: isReadyForQuote, staleTime: 60_000 },
     })
     const poolMedium = useReadContract({
         address: dexConfig?.factory,
@@ -77,7 +102,7 @@ export function useUniV3Quote({
         functionName: 'getPool',
         args: [tokenInAddress, tokenOutAddress, FEE_TIERS.MEDIUM],
         chainId,
-        query: { enabled: baseQueryEnabled, staleTime: 60_000 },
+        query: { enabled: isReadyForQuote, staleTime: 60_000 },
     })
     const poolHigh = useReadContract({
         address: dexConfig?.factory,
@@ -85,7 +110,7 @@ export function useUniV3Quote({
         functionName: 'getPool',
         args: [tokenInAddress, tokenOutAddress, FEE_TIERS.HIGH],
         chainId,
-        query: { enabled: baseQueryEnabled, staleTime: 60_000 },
+        query: { enabled: isReadyForQuote, staleTime: 60_000 },
     })
     const poolStableAddr = poolStable.data as Address | undefined
     const poolLowAddr = poolLow.data as Address | undefined
@@ -173,30 +198,20 @@ export function useUniV3Quote({
         liqMedium.isLoading,
         liqHigh.isLoading,
     ])
-    const isReadyForQuote =
-        enabled &&
-        !!tokenIn &&
-        !!tokenOut &&
-        amountIn > 0n &&
-        !!dexConfig &&
-        tokenIn.chainId === tokenOut.chainId &&
-        !isSameToken(tokenIn, tokenOut) &&
-        !wrapOperation &&
-        !!bestPool &&
-        !!bestFee
-    const quoteParams = isReadyForQuote
-        ? buildQuoteParams(
-              tokenIn.address as Address,
-              tokenOut.address as Address,
-              amountIn,
-              bestFee,
-              tokenIn.chainId
-          )
-        : null
+    const quoteParams =
+        isReadyForQuote && bestPool && bestFee
+            ? buildQuoteParams(
+                  tokenIn.address as Address,
+                  tokenOut.address as Address,
+                  amountIn,
+                  bestFee,
+                  tokenIn.chainId
+              )
+            : null
     const {
         data,
         isLoading: isQuoteLoading,
-        isError,
+        isError: isQuoteError,
         error,
     } = useReadContract({
         address: dexConfig?.quoter,
@@ -205,12 +220,12 @@ export function useUniV3Quote({
         args: quoteParams ? [quoteParams] : undefined,
         chainId: tokenIn?.chainId,
         query: {
-            enabled: isReadyForQuote,
+            enabled: isReadyForQuote && !!bestPool,
             staleTime: 10_000,
         },
     })
     const quote: QuoteResult | null = useMemo(() => {
-        if (wrapOperation && tokenIn && tokenOut && amountIn > 0n) {
+        if (wrapOperation && amountIn > 0n) {
             return {
                 amountOut: amountIn,
                 sqrtPriceX96After: 0n,
@@ -218,46 +233,32 @@ export function useUniV3Quote({
                 gasEstimate: wrapOperation === 'wrap' ? 50000n : 40000n,
             }
         }
-        if (!data) return null
-        return {
-            amountOut: data[0],
-            sqrtPriceX96After: data[1],
-            initializedTicksCrossed: Number(data[2]),
-            gasEstimate: data[3],
-        }
-    }, [data, wrapOperation, tokenIn, tokenOut, amountIn])
-    const displayError = useMemo(() => {
-        if (isError && error) return error as Error
-        if (
-            !wrapOperation &&
-            !isLoadingPool &&
-            !bestPool &&
-            tokenIn &&
-            tokenOut &&
-            baseQueryEnabled
-        ) {
-            return new Error(
-                `No pool found for ${tokenIn.symbol}/${tokenOut.symbol}. Try a different token pair.`
-            )
+        if (data) {
+            return {
+                amountOut: data[0],
+                sqrtPriceX96After: data[1],
+                initializedTicksCrossed: Number(data[2]),
+                gasEstimate: data[3],
+            }
         }
         return null
-    }, [
-        isError,
-        error,
-        isLoadingPool,
-        bestPool,
-        tokenIn,
-        tokenOut,
-        baseQueryEnabled,
-        wrapOperation,
-    ])
+    }, [wrapOperation, amountIn, data])
+    const isLoading = wrapOperation ? false : isQuoteLoading || isLoadingPool
+    const isError =
+        isQuoteError || (!wrapOperation && !isLoadingPool && !bestPool && tokenIn && tokenOut)
+    const displayError: Error | null = useMemo(() => {
+        if (error) return error as Error
+        if (!wrapOperation && !isLoadingPool && !bestPool && tokenIn && tokenOut) {
+            return new Error(`No pool found for ${tokenIn.symbol}/${tokenOut.symbol}`)
+        }
+        return null
+    }, [error, wrapOperation, isLoadingPool, bestPool, tokenIn, tokenOut])
     return {
         quote,
-        isLoading: wrapOperation ? false : isQuoteLoading || isLoadingPool,
-        isError: !!displayError,
+        isLoading,
+        isError: !!isError,
         error: displayError,
-        fee: wrapOperation ? 0 : (bestFee ?? DEFAULT_FEE_TIER),
-        isWrapUnwrap: !!wrapOperation,
-        wrapOperation,
+        fee: bestFee,
+        primaryDexId: primaryDexId ?? null,
     }
 }

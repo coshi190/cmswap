@@ -6,19 +6,19 @@ import type { Address } from 'viem'
 import type { Token } from '@/types/tokens'
 import type { QuoteResult } from '@/types/swap'
 import type { DEXType } from '@/types/dex'
-import { getV2Config } from '@/lib/dex-config'
-import { useSwapStore } from '@/store/swap-store'
+import { getV2Config, getDexsByProtocol, isV2Config, getDexConfig } from '@/lib/dex-config'
 import { UNISWAP_V2_ROUTER_ABI } from '@/lib/abis/uniswap-v2-router'
 import { UNISWAP_V2_FACTORY_ABI } from '@/lib/abis/uniswap-v2-factory'
 import { buildV2QuoteParams } from '@/services/dex/uniswap-v2'
 import { isSameToken, getSwapAddress, getWrapOperation } from '@/services/tokens'
+import { ProtocolType } from '@/lib/dex-config'
 
 export interface UseUniV2QuoteParams {
     tokenIn: Token | null
     tokenOut: Token | null
     amountIn: bigint
     enabled?: boolean
-    dexId?: DEXType
+    dexId?: DEXType | DEXType[]
 }
 
 export interface UseUniV2QuoteResult {
@@ -26,8 +26,7 @@ export interface UseUniV2QuoteResult {
     isLoading: boolean
     isError: boolean
     error: Error | null
-    isWrapUnwrap: boolean
-    wrapOperation: 'wrap' | 'unwrap' | null
+    primaryDexId: DEXType | null
 }
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address
@@ -39,20 +38,40 @@ export function useUniV2Quote({
     enabled = true,
     dexId,
 }: UseUniV2QuoteParams): UseUniV2QuoteResult {
-    const { selectedDex: storeSelectedDex } = useSwapStore()
-    const effectiveDexId = dexId ?? storeSelectedDex
-    const dexConfig = tokenIn ? getV2Config(tokenIn.chainId, effectiveDexId) : null
     const chainId = tokenIn?.chainId ?? 1
+    const requestedDexIds = useMemo(() => {
+        if (!tokenIn) return []
+        if (!dexId) {
+            return getDexsByProtocol(chainId, ProtocolType.V2)
+        }
+        const ids = Array.isArray(dexId) ? dexId : [dexId]
+        return ids.filter((id) => {
+            const config = getDexConfig(chainId, id)
+            return config && isV2Config(config)
+        })
+    }, [dexId, tokenIn, chainId])
     const wrapOperation = useMemo(() => {
         return getWrapOperation(tokenIn, tokenOut)
     }, [tokenIn, tokenOut])
-    const tokenInAddress = tokenIn
-        ? getSwapAddress(tokenIn.address as Address, chainId, dexConfig?.wnative)
-        : ZERO_ADDRESS
-    const tokenOutAddress = tokenOut
-        ? getSwapAddress(tokenOut.address as Address, chainId, dexConfig?.wnative)
-        : ZERO_ADDRESS
-    const baseQueryEnabled = !!tokenIn && !!tokenOut && !!dexConfig && !wrapOperation
+    const primaryDexId = requestedDexIds[0]
+    const dexConfig = primaryDexId ? getV2Config(chainId, primaryDexId) : null
+    const tokenInAddress = useMemo(() => {
+        if (!tokenIn) return ZERO_ADDRESS
+        return getSwapAddress(tokenIn.address as Address, chainId, dexConfig?.wnative)
+    }, [tokenIn, chainId, dexConfig?.wnative])
+    const tokenOutAddress = useMemo(() => {
+        if (!tokenOut) return ZERO_ADDRESS
+        return getSwapAddress(tokenOut.address as Address, chainId, dexConfig?.wnative)
+    }, [tokenOut, chainId, dexConfig?.wnative])
+    const isReadyForQuote =
+        enabled &&
+        !!tokenIn &&
+        !!tokenOut &&
+        amountIn > 0n &&
+        !!dexConfig &&
+        tokenIn.chainId === tokenOut.chainId &&
+        !isSameToken(tokenIn, tokenOut) &&
+        !wrapOperation
     const {
         data: pairAddress,
         isLoading: isPairLoading,
@@ -64,7 +83,7 @@ export function useUniV2Quote({
         args: [tokenInAddress, tokenOutAddress],
         chainId,
         query: {
-            enabled: baseQueryEnabled,
+            enabled: isReadyForQuote,
             staleTime: 60_000,
         },
     })
@@ -79,16 +98,6 @@ export function useUniV2Quote({
             dexConfig?.wnative
         )
     }, [tokenIn, tokenOut, amountIn, chainId, dexConfig])
-    const isReadyForQuote =
-        enabled &&
-        !!tokenIn &&
-        !!tokenOut &&
-        amountIn > 0n &&
-        !!dexConfig &&
-        tokenIn.chainId === tokenOut.chainId &&
-        !isSameToken(tokenIn, tokenOut) &&
-        !wrapOperation &&
-        pairExists
     const {
         data: amountsOut,
         isLoading: isQuoteLoading,
@@ -101,53 +110,50 @@ export function useUniV2Quote({
         args: quoteParams ? [quoteParams.amountIn, quoteParams.path] : undefined,
         chainId,
         query: {
-            enabled: isReadyForQuote,
+            enabled: isReadyForQuote && pairExists,
             staleTime: 10_000,
         },
     })
     const quote: QuoteResult | null = useMemo(() => {
-        if (wrapOperation && tokenIn && tokenOut && amountIn > 0n) {
+        if (wrapOperation && amountIn > 0n) {
             return {
                 amountOut: amountIn,
-                sqrtPriceX96After: 0n, // N/A for V2
-                initializedTicksCrossed: 0, // N/A for V2
+                sqrtPriceX96After: 0n,
+                initializedTicksCrossed: 0,
                 gasEstimate: wrapOperation === 'wrap' ? 50000n : 40000n,
             }
         }
-        if (!amountsOut || amountsOut.length < 2) return null
-        const amountOut = amountsOut[amountsOut.length - 1]
-        if (amountOut === undefined) return null
-        return {
-            amountOut,
-            sqrtPriceX96After: 0n, // N/A for V2
-            initializedTicksCrossed: 0, // N/A for V2
-            gasEstimate: 150000n, // Estimate for V2 swap
-        }
-    }, [amountsOut, wrapOperation, tokenIn, tokenOut, amountIn])
-    const displayError = useMemo(() => {
-        if (isQuoteError && quoteError) return quoteError as Error
-        if (isPairError) return new Error('Failed to check pair')
-        if (!wrapOperation && !isPairLoading && !pairExists && tokenIn && tokenOut && dexConfig) {
-            return new Error(`No pair found for ${tokenIn.symbol}/${tokenOut.symbol} on jibswap.`)
+        if (amountsOut && amountsOut.length >= 2) {
+            const amountOut = amountsOut[amountsOut.length - 1]
+            if (amountOut !== undefined) {
+                return {
+                    amountOut,
+                    sqrtPriceX96After: 0n,
+                    initializedTicksCrossed: 0,
+                    gasEstimate: 150000n,
+                }
+            }
         }
         return null
-    }, [
-        isQuoteError,
-        quoteError,
-        isPairError,
-        isPairLoading,
-        pairExists,
-        tokenIn,
-        tokenOut,
-        dexConfig,
-        wrapOperation,
-    ])
+    }, [wrapOperation, amountIn, amountsOut])
+    const isLoading = wrapOperation ? false : isQuoteLoading || isPairLoading
+    const isError =
+        isQuoteError ||
+        isPairError ||
+        (!wrapOperation && !isPairLoading && !pairExists && tokenIn && tokenOut)
+    const displayError: Error | null = useMemo(() => {
+        if (quoteError) return quoteError as Error
+        if (isPairError) return new Error('Failed to check pair')
+        if (!wrapOperation && !isPairLoading && !pairExists && tokenIn && tokenOut) {
+            return new Error(`No pair found for ${tokenIn.symbol}/${tokenOut.symbol}`)
+        }
+        return null
+    }, [quoteError, isPairError, wrapOperation, isPairLoading, pairExists, tokenIn, tokenOut])
     return {
         quote,
-        isLoading: wrapOperation ? false : isQuoteLoading || isPairLoading,
-        isError: !!displayError,
+        isLoading,
+        isError: !!isError,
         error: displayError,
-        isWrapUnwrap: !!wrapOperation,
-        wrapOperation,
+        primaryDexId: primaryDexId ?? null,
     }
 }
