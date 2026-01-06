@@ -20,7 +20,7 @@ export interface UseUniV2SwapExecutionParams {
     amountIn: bigint
     amountOutMinimum: bigint
     recipient: Address
-    slippage: number // in percentage (0.5, 1, etc.)
+    slippage: number
     deadlineMinutes: number
 }
 
@@ -44,7 +44,7 @@ export function useUniV2SwapExecution({
     amountIn,
     amountOutMinimum,
     recipient,
-    _slippage,
+    slippage, // eslint-disable-line @typescript-eslint/no-unused-vars -- reserved for future use
     deadlineMinutes,
 }: UseUniV2SwapExecutionParams): UseUniV2SwapExecutionResult {
     const { selectedDex } = useSwapStore()
