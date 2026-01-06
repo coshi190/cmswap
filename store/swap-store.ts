@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import type { Token } from '@/types/tokens'
-import type { SwapSettings, SwapState, QuoteResult } from '@/types/swap'
+import type { SwapSettings, SwapState, QuoteResult, DexQuote } from '@/types/swap'
 import type { DEXType } from '@/types/dex'
 
 interface SwapStore extends SwapState {
@@ -9,6 +9,9 @@ interface SwapStore extends SwapState {
     settings: SwapSettings
     // DEX selection
     selectedDex: DEXType
+    // Multi-DEX quotes state
+    dexQuotes: Record<DEXType, DexQuote>
+    bestQuoteDex: DEXType | null
     // URL sync state
     isUpdatingFromUrl: boolean
 
@@ -26,6 +29,9 @@ interface SwapStore extends SwapState {
     setDeadlineMinutes: (minutes: number) => void
     setExpertMode: (enabled: boolean) => void
     setIsUpdatingFromUrl: (updating: boolean) => void
+    setDexQuotes: (quotes: Record<DEXType, DexQuote>) => void
+    setBestQuoteDex: (dexId: DEXType | null) => void
+    clearDexQuotes: () => void
     swapTokens: () => void
     reset: () => void
 }
@@ -57,6 +63,8 @@ export const useSwapStore = create<SwapStore>()(
                 ...initialState,
                 settings: defaultSettings,
                 selectedDex: 'cmswap',
+                dexQuotes: {},
+                bestQuoteDex: null,
 
                 // Token actions
                 setTokenIn: (token) => set({ tokenIn: token }),
@@ -129,6 +137,11 @@ export const useSwapStore = create<SwapStore>()(
 
                 setIsUpdatingFromUrl: (updating) => set({ isUpdatingFromUrl: updating }),
 
+                // Multi-DEX quotes actions
+                setDexQuotes: (quotes) => set({ dexQuotes: quotes }),
+                setBestQuoteDex: (dexId) => set({ bestQuoteDex: dexId }),
+                clearDexQuotes: () => set({ dexQuotes: {}, bestQuoteDex: null }),
+
                 // Reset to initial state
                 reset: () => set(initialState),
             }),
@@ -150,3 +163,5 @@ export const useSwapTokens = () =>
     useSwapStore((state) => ({ tokenIn: state.tokenIn, tokenOut: state.tokenOut }))
 export const useSwapAmounts = () =>
     useSwapStore((state) => ({ amountIn: state.amountIn, amountOut: state.amountOut }))
+export const useDexQuotes = () => useSwapStore((state) => state.dexQuotes)
+export const useBestQuoteDex = () => useSwapStore((state) => state.bestQuoteDex)

@@ -5,6 +5,7 @@ import { useReadContract } from 'wagmi'
 import type { Address } from 'viem'
 import type { Token } from '@/types/tokens'
 import type { QuoteResult } from '@/types/swap'
+import type { DEXType } from '@/types/dex'
 import { getV2Config } from '@/lib/dex-config'
 import { useSwapStore } from '@/store/swap-store'
 import { UNISWAP_V2_ROUTER_ABI } from '@/lib/abis/uniswap-v2-router'
@@ -17,6 +18,7 @@ export interface UseUniV2QuoteParams {
     tokenOut: Token | null
     amountIn: bigint
     enabled?: boolean
+    dexId?: DEXType
 }
 
 export interface UseUniV2QuoteResult {
@@ -35,9 +37,11 @@ export function useUniV2Quote({
     tokenOut,
     amountIn,
     enabled = true,
+    dexId,
 }: UseUniV2QuoteParams): UseUniV2QuoteResult {
-    const { selectedDex } = useSwapStore()
-    const dexConfig = tokenIn ? getV2Config(tokenIn.chainId, selectedDex) : null
+    const { selectedDex: storeSelectedDex } = useSwapStore()
+    const effectiveDexId = dexId ?? storeSelectedDex
+    const dexConfig = tokenIn ? getV2Config(tokenIn.chainId, effectiveDexId) : null
     const chainId = tokenIn?.chainId ?? 1
     const wrapOperation = useMemo(() => {
         return getWrapOperation(tokenIn, tokenOut)

@@ -10,8 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { useSwapStore } from '@/store/swap-store'
 import { useTokenBalance } from '@/hooks/useTokenBalance'
-import { useUniV3Quote } from '@/hooks/useUniV3Quote'
-import { useUniV2Quote } from '@/hooks/useUniV2Quote'
+import { useMultiDexQuotes } from '@/hooks/useMultiDexQuotes'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useUniV3SwapExecution } from '@/hooks/useUniV3SwapExecution'
 import { useUniV2SwapExecution } from '@/hooks/useUniV2SwapExecution'
@@ -102,27 +101,31 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
             return 0n
         }
     }, [debouncedAmountIn, tokenIn])
-    const v3Quote = useUniV3Quote({
+    const { dexQuotes } = useMultiDexQuotes({
         tokenIn,
         tokenOut,
         amountIn: amountInBigInt,
-        enabled: !isV2Protocol,
+        enabled: !!tokenIn && !!tokenOut && amountInBigInt > 0n,
     })
-    const v2Quote = useUniV2Quote({
-        tokenIn,
-        tokenOut,
-        amountIn: amountInBigInt,
-        enabled: !!isV2Protocol,
-    })
-    const {
-        quote,
-        isLoading: isQuoteLoading,
-        isError,
-        error,
-        isWrapUnwrap,
-        wrapOperation,
-    } = isV2Protocol ? v2Quote : v3Quote
-    const fee = isV2Protocol ? 3000 : (v3Quote.fee ?? 3000)
+    const selectedDexQuote = useMemo(() => {
+        const quoteData = dexQuotes[selectedDex]
+        return {
+            quote: quoteData?.quote ?? null,
+            isLoading: quoteData?.isLoading ?? false,
+            isError: quoteData?.isError ?? false,
+            error: quoteData?.error ?? null,
+            isWrapUnwrap: false, // Will be calculated below
+            wrapOperation: null as 'wrap' | 'unwrap' | null,
+            fee: quoteData?.fee,
+        }
+    }, [dexQuotes, selectedDex])
+    const wrapOp = useMemo(() => {
+        return getWrapOperation(tokenIn, tokenOut)
+    }, [tokenIn, tokenOut])
+    const { quote, isLoading: isQuoteLoading, isError, error, fee: quoteFee } = selectedDexQuote
+    const isWrapUnwrap = !!wrapOp
+    const wrapOperation = wrapOp
+    const fee = quoteFee ?? (isV2Protocol ? 3000 : 3000) // Default to 3000 (0.3%) if not set
     useEffect(() => {
         if (quote && tokenOut) {
             setQuote(quote)
@@ -141,9 +144,6 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         return '0'
     }, [quote, isQuoteLoading, isError, tokenOut])
     const isSameTokenSwap = isSameToken(tokenIn, tokenOut)
-    const wrapOp = useMemo(() => {
-        return getWrapOperation(tokenIn, tokenOut)
-    }, [tokenIn, tokenOut])
     const amountOutMinimum = useMemo(() => {
         if (!quote || !tokenOut) return 0n
         const calcFn = isV2Protocol ? calculateMinOutputV2 : calculateMinOutput

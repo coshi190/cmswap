@@ -1,4 +1,6 @@
 import type { Address } from 'viem'
+import type { DEXType } from './dex'
+import { ProtocolType } from '@/lib/dex-config'
 
 /**
  * Swap parameters for executing a swap
@@ -21,6 +23,19 @@ export interface QuoteResult {
     sqrtPriceX96After: bigint
     initializedTicksCrossed: number
     gasEstimate: bigint
+}
+
+/**
+ * Individual DEX quote result for multi-DEX comparison
+ */
+export interface DexQuote {
+    dexId: DEXType
+    quote: QuoteResult | null
+    isLoading: boolean
+    isError: boolean
+    error: Error | null
+    protocolType: ProtocolType.V2 | ProtocolType.V3
+    fee?: number // For V3 protocols
 }
 
 /**

@@ -4,13 +4,14 @@ Implementation phases and TODO list for cmswap development.
 
 ## Project Status
 
-**Current Phase**: Phase 2 - Swap Feature (In Progress 🚧)
+**Current Phase**: Phase 2 - Swap Feature (98% complete)
 
 - [x] Phase 1: Foundation ✅
-- [ ] Phase 2: Swap Feature 🚧 (95% complete)
+- [ ] Phase 2: Swap Feature 🚧 (98% complete)
   - [x] KUB Testnet integration
   - [x] JB Chain cmswap V3 integration ✅
   - [x] JB Chain jibswap V2 integration ✅
+  - [x] Multi-DEX quote display ✅
   - [ ] JB Chain commudao integration
 - [ ] Phase 3: Earn Feature 🆕
 - [ ] Phase 4: Bridge Feature
@@ -114,15 +115,15 @@ Implementation phases and TODO list for cmswap development.
 - [x] External link to DEX website
 - [x] Added jibswap and commudao to `DEX_REGISTRY` in `types/dex.ts`
 
-**Phase 2: Multi-DEX Quote Display** (Planned)
-- [ ] Add `dexQuotes` state to `swap-store.ts`
-- [ ] Create `hooks/useMultiDexQuotes.ts` for parallel quote fetching
-- [ ] Display quotes per DEX in expanded view
-- [ ] Show loading/error states for each DEX
+**Phase 2: Multi-DEX Quote Display** ✅ (Implemented)
+- [x] Add `dexQuotes` state to `swap-store.ts`
+- [x] Create `hooks/useMultiDexQuotes.ts` for parallel quote fetching
+- [x] Display quotes per DEX in expanded view
+- [x] Show loading/error states for each DEX
 
-**Phase 3: Price Comparison Features** (Planned)
+**Phase 3: Price Comparison Features** (In Progress)
 - [ ] Calculate price difference % vs best price
-- [ ] Highlight best price with trophy/badge
+- [x] Highlight best price with trophy/badge
 - [ ] Auto-select best price on mount
 - [ ] Persist user's DEX selection preference
 

@@ -1,19 +1,36 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useChainId } from 'wagmi'
+import { parseUnits, formatUnits } from 'viem'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import { useSwapStore } from '@/store/swap-store'
+import { useMultiDexQuotes } from '@/hooks/useMultiDexQuotes'
 import { DEX_REGISTRY } from '@/types/dex'
 import { getSupportedDexs } from '@/lib/dex-config'
-import { ExternalLink, ChevronDown, ChevronUp, Check } from 'lucide-react'
+import { ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
 
 export function DexSelectCard() {
     const [expanded, setExpanded] = useState(false)
-    const { selectedDex, setSelectedDex } = useSwapStore()
+    const { selectedDex, setSelectedDex, tokenIn, tokenOut, amountIn } = useSwapStore()
     const chainId = useChainId()
     const supportedDexs = getSupportedDexs(chainId)
+    const amountInBigInt = useMemo(() => {
+        if (!amountIn || !tokenIn) return 0n
+        try {
+            return parseUnits(amountIn, tokenIn.decimals)
+        } catch {
+            return 0n
+        }
+    }, [amountIn, tokenIn])
+    const { dexQuotes, bestQuoteDex } = useMultiDexQuotes({
+        tokenIn,
+        tokenOut,
+        amountIn: amountInBigInt,
+        enabled: !!tokenIn && !!tokenOut && amountInBigInt > 0n,
+    })
     const availableDexs = Object.values(DEX_REGISTRY).filter((dex) =>
         supportedDexs.includes(dex.id)
     )
@@ -22,6 +39,28 @@ export function DexSelectCard() {
         return null
     }
     const toggleExpanded = () => setExpanded(!expanded)
+    const renderQuoteInfo = (dexId: string) => {
+        const quoteData = dexQuotes[dexId]
+        if (!quoteData) return null
+        if (quoteData.isLoading) {
+            return <span className="text-xs text-muted-foreground">Loading...</span>
+        }
+        if (quoteData.isError) {
+            return <span className="text-xs text-muted-foreground">No quote</span>
+        }
+        if (quoteData.quote && tokenOut) {
+            const amountOut = formatUnits(quoteData.quote.amountOut, tokenOut.decimals)
+            const isBest = bestQuoteDex === dexId
+            return (
+                <div className="flex items-center gap-2">
+                    <span className={`text-sm font-medium ${isBest ? 'text-green-600' : ''}`}>
+                        {parseFloat(amountOut).toFixed(6)} {tokenOut.symbol}
+                    </span>
+                </div>
+            )
+        }
+        return null
+    }
     return (
         <div className="space-y-2">
             <Card>
@@ -49,6 +88,7 @@ export function DexSelectCard() {
                     <CardContent className="p-2">
                         {availableDexs.map((dex) => {
                             const isSelected = dex.id === selectedDex
+                            const isBest = bestQuoteDex === dex.id
                             return (
                                 <button
                                     key={dex.id}
@@ -65,9 +105,7 @@ export function DexSelectCard() {
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                {isSelected && (
-                                                    <Check className="h-4 w-4 text-primary shrink-0" />
-                                                )}
+                                                {isBest && <Badge variant="secondary">Best</Badge>}
                                                 <span
                                                     className={`font-medium ${
                                                         isSelected ? 'text-primary' : ''
@@ -81,6 +119,7 @@ export function DexSelectCard() {
                                                     {dex.description}
                                                 </p>
                                             )}
+                                            <div className="mt-2">{renderQuoteInfo(dex.id)}</div>
                                         </div>
                                         {dex.website && (
                                             <a
