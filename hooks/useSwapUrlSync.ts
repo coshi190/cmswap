@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useChainId } from 'wagmi'
+import { useChainId, useSwitchChain } from 'wagmi'
 import { useDebounce } from './useDebounce'
 import { useSwapStore } from '@/store/swap-store'
 import {
@@ -10,6 +10,8 @@ import {
     buildSwapSearchParams,
     parseAndValidateSwapParams,
 } from '@/lib/swap-params'
+import { toast } from 'sonner'
+import { getChainMetadata } from '@/lib/wagmi'
 
 const URL_UPDATE_DEBOUNCE_MS = 500
 
@@ -17,6 +19,7 @@ export function useSwapUrlSync() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const chainId = useChainId()
+    const { switchChain, isPending: isSwitchingChain } = useSwitchChain()
     const {
         tokenIn,
         tokenOut,
@@ -28,41 +31,116 @@ export function useSwapUrlSync() {
     } = useSwapStore()
     const hasInitializedRef = useRef(false)
     const isUpdatingFromUrlRef = useRef(false)
+    const pendingUrlParamsRef = useRef<ReturnType<typeof parseSwapSearchParams> | null>(null)
+    const lastProcessedChainIdRef = useRef<number | null>(null)
+    const isInitialLoadRef = useRef(true)
+    const initialSearchParamsRef = useRef<string | null>(null)
+    const applyUrlParams = useCallback(
+        (urlParams: ReturnType<typeof parseSwapSearchParams>, targetChainId: number) => {
+            const parsed = parseAndValidateSwapParams(targetChainId, urlParams)
+            isUpdatingFromUrlRef.current = true
+            setIsUpdatingFromUrl(true)
+            if (parsed.tokenIn) {
+                setTokenIn(parsed.tokenIn)
+            }
+            if (parsed.tokenOut) {
+                setTokenOut(parsed.tokenOut)
+            }
+            if (parsed.amountIn) {
+                setAmountIn(parsed.amountIn)
+            }
+            setTimeout(() => {
+                isUpdatingFromUrlRef.current = false
+                setIsUpdatingFromUrl(false)
+            }, 0)
+        },
+        [setTokenIn, setTokenOut, setAmountIn, setIsUpdatingFromUrl]
+    )
     useEffect(() => {
         if (isUpdatingFromUrlRef.current) return
         const urlParams = parseSwapSearchParams(searchParams)
         const parsed = parseAndValidateSwapParams(chainId, urlParams)
-        isUpdatingFromUrlRef.current = true
-        setIsUpdatingFromUrl(true)
-        if (parsed.tokenIn && (!tokenIn || parsed.tokenIn.address !== tokenIn.address)) {
-            setTokenIn(parsed.tokenIn)
+        if (initialSearchParamsRef.current === null) {
+            initialSearchParamsRef.current = searchParams.toString()
         }
-        if (parsed.tokenOut && (!tokenOut || parsed.tokenOut.address !== tokenOut.address)) {
-            setTokenOut(parsed.tokenOut)
+        if (parsed.targetChainId && parsed.targetChainId !== chainId) {
+            if (isInitialLoadRef.current) {
+                pendingUrlParamsRef.current = urlParams
+                const targetChainMeta = getChainMetadata(parsed.targetChainId)
+                const chainName = targetChainMeta?.name || `Chain ${parsed.targetChainId}`
+                toast.info(`Switch to ${chainName}?`, {
+                    description: 'The shared link requires a different network.',
+                    action: {
+                        label: 'Switch',
+                        onClick: () => {
+                            switchChain(
+                                { chainId: parsed.targetChainId! },
+                                {
+                                    onSuccess: () => {
+                                        toast.success(`Switched to ${chainName}`)
+                                    },
+                                    onError: (error) => {
+                                        toast.error('Failed to switch network', {
+                                            description: error.message,
+                                        })
+                                        pendingUrlParamsRef.current = null
+                                        const newParams = buildSwapSearchParams({
+                                            input: urlParams.input,
+                                            output: urlParams.output,
+                                            amount: urlParams.amount,
+                                        })
+                                        const newUrl = `${window.location.pathname}${newParams.toString() ? `?${newParams.toString()}` : ''}`
+                                        router.replace(newUrl, { scroll: false })
+                                    },
+                                }
+                            )
+                        },
+                    },
+                    duration: 10000,
+                })
+                isInitialLoadRef.current = false
+                hasInitializedRef.current = true
+                return
+            }
+            isInitialLoadRef.current = false
+            hasInitializedRef.current = true
+            lastProcessedChainIdRef.current = chainId
+            return
         }
-        if (parsed.amountIn && amountIn !== parsed.amountIn) {
-            setAmountIn(parsed.amountIn)
-        }
-        setTimeout(() => {
-            isUpdatingFromUrlRef.current = false
-            setIsUpdatingFromUrl(false)
-        }, 0)
+        applyUrlParams(urlParams, chainId)
+        isInitialLoadRef.current = false
         hasInitializedRef.current = true
-    }, [searchParams])
+        lastProcessedChainIdRef.current = chainId
+    }, [searchParams, chainId, switchChain, applyUrlParams, router])
+    useEffect(() => {
+        if (pendingUrlParamsRef.current && lastProcessedChainIdRef.current !== chainId) {
+            const urlParams = pendingUrlParamsRef.current
+            const parsed = parseAndValidateSwapParams(chainId, urlParams)
+            if (!parsed.targetChainId || parsed.targetChainId === chainId) {
+                applyUrlParams(urlParams, chainId)
+                pendingUrlParamsRef.current = null
+                lastProcessedChainIdRef.current = chainId
+            }
+        }
+    }, [chainId, applyUrlParams])
     const debouncedTokenIn = useDebounce(tokenIn, URL_UPDATE_DEBOUNCE_MS)
     const debouncedTokenOut = useDebounce(tokenOut, URL_UPDATE_DEBOUNCE_MS)
     const debouncedAmountIn = useDebounce(amountIn, URL_UPDATE_DEBOUNCE_MS)
     useEffect(() => {
         if (!hasInitializedRef.current) return
         if (isUpdatingFromUrlRef.current) return
+        if (isSwitchingChain) return
+        if (pendingUrlParamsRef.current) return
         const newParams = buildSwapSearchParams({
             input: debouncedTokenIn?.address,
             output: debouncedTokenOut?.address,
             amount: debouncedAmountIn || undefined,
+            chain: chainId.toString(),
         })
         const currentParams = new URLSearchParams(searchParams.toString())
         const newParamsStr = newParams.toString()
         const currentParamsStr = currentParams.toString()
+
         if (newParamsStr !== currentParamsStr) {
             isUpdatingFromUrlRef.current = true
             const newUrl = `${window.location.pathname}${newParamsStr ? `?${newParamsStr}` : ''}`
@@ -71,5 +149,15 @@ export function useSwapUrlSync() {
                 isUpdatingFromUrlRef.current = false
             }, 100)
         }
-    }, [debouncedTokenIn, debouncedTokenOut, debouncedAmountIn, router, searchParams])
+    }, [
+        debouncedTokenIn,
+        debouncedTokenOut,
+        debouncedAmountIn,
+        chainId,
+        router,
+        searchParams,
+        isSwitchingChain,
+    ])
+
+    return { isUpdatingFromUrl: isUpdatingFromUrlRef.current }
 }

@@ -13,6 +13,7 @@ export function parseSwapSearchParams(searchParams: URLSearchParams): SwapUrlPar
         input: searchParams.get('input') || undefined,
         output: searchParams.get('output') || undefined,
         amount: searchParams.get('amount') || undefined,
+        chain: searchParams.get('chain') || undefined,
     }
 }
 
@@ -25,6 +26,7 @@ export function buildSwapSearchParams(params: SwapUrlParams): URLSearchParams {
     if (params.input) searchParams.set('input', params.input)
     if (params.output) searchParams.set('output', params.output)
     if (params.amount) searchParams.set('amount', params.amount)
+    if (params.chain) searchParams.set('chain', params.chain)
 
     return searchParams
 }
@@ -65,6 +67,15 @@ export function validateAmountString(amount: string | undefined): string {
 }
 
 /**
+ * Parse chain ID from URL param
+ */
+export function parseChainId(chainParam: string | undefined): number | null {
+    if (!chainParam) return null
+    const parsed = parseInt(chainParam, 10)
+    return isNaN(parsed) ? null : parsed
+}
+
+/**
  * Parse and validate all URL parameters
  */
 export function parseAndValidateSwapParams(
@@ -72,10 +83,14 @@ export function parseAndValidateSwapParams(
     urlParams: SwapUrlParams
 ): ParsedSwapUrlParams {
     const errors: string[] = []
+    const targetChainId = parseChainId(urlParams.chain)
+
+    // Use target chain from URL if specified, otherwise use current chain
+    const resolveChainId = targetChainId ?? chainId
 
     // Resolve tokens
-    const tokenIn = resolveTokenFromAddress(chainId, urlParams.input)
-    const tokenOut = resolveTokenFromAddress(chainId, urlParams.output)
+    const tokenIn = resolveTokenFromAddress(resolveChainId, urlParams.input)
+    const tokenOut = resolveTokenFromAddress(resolveChainId, urlParams.output)
 
     // Validate amount
     const amountIn = validateAmountString(urlParams.amount)
@@ -97,6 +112,7 @@ export function parseAndValidateSwapParams(
         tokenIn,
         tokenOut,
         amountIn,
+        targetChainId,
         isValid: errors.length === 0,
         errors,
     }

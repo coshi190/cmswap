@@ -196,11 +196,18 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
             toastError(swapError, 'Swap failed')
         }
     }, [swapIsError, swapError])
+    const isUpdatingFromUrl = useSwapStore((state) => state.isUpdatingFromUrl)
+    const prevChainIdRef = useRef(chainId)
     useEffect(() => {
-        setTokenIn(null)
-        setTokenOut(null)
-        hasInitializedTokensRef.current = false
-    }, [chainId, setTokenIn, setTokenOut])
+        if (prevChainIdRef.current !== chainId && prevChainIdRef.current !== 0) {
+            if (!isUpdatingFromUrl) {
+                setTokenIn(null)
+                setTokenOut(null)
+                hasInitializedTokensRef.current = false
+            }
+        }
+        prevChainIdRef.current = chainId
+    }, [chainId, setTokenIn, setTokenOut, isUpdatingFromUrl])
     useEffect(() => {
         if (!hasInitializedTokensRef.current && !tokenIn && tokens.length > 0 && tokens[0]) {
             setTokenIn(tokens[0])

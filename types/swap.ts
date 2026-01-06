@@ -85,12 +85,13 @@ export interface SwapState {
 
 /**
  * URL parameters for swap page
- * Format: /swap?input={address}&output={address}&amount={string}
+ * Format: /swap?input={address}&output={address}&amount={string}&chain={chainId}
  */
 export interface SwapUrlParams {
     input?: string // Token address
     output?: string // Token address
     amount?: string // Input amount as decimal string
+    chain?: string // Chain ID as string
 }
 
 /**
@@ -100,6 +101,7 @@ export interface ParsedSwapUrlParams {
     tokenIn: Token | null
     tokenOut: Token | null
     amountIn: string
+    targetChainId: number | null // Chain ID from URL param
     isValid: boolean
     errors: string[]
 }
