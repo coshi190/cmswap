@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import type { DEXType } from '@/types/dex'
-import { kubTestnet, jbc } from './wagmi'
+import { kubTestnet, jbc, bitkub } from './wagmi'
 
 /**
  * Protocol types supported by the DEX system
@@ -122,6 +122,18 @@ export const DEX_CONFIGS_REGISTRY: Record<DEXType, DEXConfiguration> = {
                     factory: '0x5835f123bDF137864263bf204Cf4450aAD1Ba3a7' as Address,
                     quoter: '0x5ad32c64A2aEd381299061F32465A22B1f7A2EE2' as Address,
                     swapRouter: '0x2174b3346CCEdBB4Faaff5d8088ff60B74909A9d' as Address,
+                    feeTiers: [FEE_TIERS.STABLE, FEE_TIERS.LOW, FEE_TIERS.MEDIUM, FEE_TIERS.HIGH],
+                    defaultFeeTier: FEE_TIERS.MEDIUM,
+                },
+            },
+            [bitkub.id]: {
+                [ProtocolType.V3]: {
+                    protocolType: ProtocolType.V3,
+                    chainId: bitkub.id,
+                    enabled: true,
+                    factory: '0x090C6E5fF29251B1eF9EC31605Bdd13351eA316C' as Address,
+                    quoter: '0xCB0c6E78519f6B4c1b9623e602E831dEf0f5ff7f' as Address,
+                    swapRouter: '0x3F7582E36843FF79F173c7DC19f517832496f2D8' as Address,
                     feeTiers: [FEE_TIERS.STABLE, FEE_TIERS.LOW, FEE_TIERS.MEDIUM, FEE_TIERS.HIGH],
                     defaultFeeTier: FEE_TIERS.MEDIUM,
                 },

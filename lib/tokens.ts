@@ -1,6 +1,6 @@
 import type { Token } from '@/types/tokens'
 import type { Address } from 'viem'
-import { kubTestnet, jbc, isNativeToken } from './wagmi'
+import { kubTestnet, jbc, bitkub, isNativeToken } from './wagmi'
 
 export const KUB_TESTNET_TOKENS: Token[] = [
     {
@@ -104,11 +104,87 @@ export const JB_CHAIN_TOKENS: Token[] = [
     },
 ]
 
+export const KUB_MAINNET_TOKENS: Token[] = [
+    {
+        address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' as const,
+        symbol: 'KUB',
+        name: 'KUB',
+        decimals: 18,
+        chainId: bitkub.id,
+        logo: 'https://cmswap.mypinata.cloud/ipfs/bafkreifelq2ktrxybwnkyabw7veqzec3p4v47aoco7acnzdwj34sn7q56u',
+    },
+    {
+        address: '0x67eBD850304c70d983B2d1b93ea79c7CD6c3F6b5' as const,
+        symbol: 'KKUB',
+        name: 'Wrapped KUB',
+        decimals: 18,
+        chainId: bitkub.id,
+        logo: 'https://cmswap.mypinata.cloud/ipfs/bafkreifelq2ktrxybwnkyabw7veqzec3p4v47aoco7acnzdwj34sn7q56u',
+    },
+    {
+        address: '0x7d984C24d2499D840eB3b7016077164e15E5faA6' as const,
+        symbol: 'KUSDT',
+        name: 'KUSDT',
+        decimals: 18,
+        chainId: bitkub.id,
+        logo: 'https://cmswap.mypinata.cloud/ipfs/bafkreieg7yf6iwx7obygg62hz252bwnaddedanvlizonaawagk7eze4qcu',
+    },
+    {
+        address: '0x9B005000A10Ac871947D99001345b01C1cEf2790' as const,
+        symbol: 'CMM',
+        name: 'CMM',
+        decimals: 18,
+        chainId: bitkub.id,
+        logo: 'https://cmswap.mypinata.cloud/ipfs/bafkreiavqn4meapmjfpe756wrg4fsdnd33brbrsi55mb27tmttoctbyzme',
+    },
+    {
+        address: '0x95013Dcb6A561e6C003AED9C43Fb8B64008aA361' as const,
+        symbol: 'LUMI',
+        name: 'LUMI',
+        decimals: 18,
+        chainId: bitkub.id,
+        logo: 'https://cmswap.mypinata.cloud/ipfs/bafkreif336hux427usw7cdeyxgfuls7xkstal6yphat2fdxwvvb4icnkcq',
+    },
+    {
+        address: '0xC8925E89bE4Ce76218a3e52B995C5Ae02662A94F' as const,
+        symbol: 'ISOLA',
+        name: 'ISOLA',
+        decimals: 18,
+        chainId: bitkub.id,
+        logo: 'https://cmswap.mypinata.cloud/ipfs/bafkreiggs47xpvrutabszgn73mwchzambqbv4dspreoglqqioazof4k2sa',
+    },
+    {
+        address: '0x9cf6dF95b918307Ff81feF70E616a094e9977a28' as const,
+        symbol: 'KSOLA',
+        name: 'KSOLA',
+        decimals: 18,
+        chainId: bitkub.id,
+        logo: 'https://cmswap.mypinata.cloud/ipfs/bafkreie7n4loanq3vbji47ijr6xhsf47xsbf4fybrjwzkerwd2aonnr6xq',
+    },
+    {
+        address: '0x9BEc198c43B0714aEEd3c1bF21498ecBeFEB19F8' as const,
+        symbol: 'KJFIN',
+        name: 'KJFIN',
+        decimals: 18,
+        chainId: bitkub.id,
+        logo: 'https://cmswap.mypinata.cloud/ipfs/bafkreicsaxloa43u6xq2pscenskkmqwyb2w5gwauik735opgoc2qzpmob4',
+    },
+    {
+        address: '0xF27DF35ead39E2aed24cc05C52db303Ef4C4aA83' as const,
+        symbol: 'SHK',
+        name: 'SHK',
+        decimals: 18,
+        chainId: bitkub.id,
+        logo: 'https://cmswap.mypinata.cloud/ipfs/bafybeictpc76cigf42dly6c3qtnbu5cbtons4qvsqr4juxcs7g7k4nbche',
+    },
+]
+
 /**
  * Token list by chain ID
  */
 export const TOKEN_LISTS: Record<number, Token[]> = {
     [kubTestnet.id]: KUB_TESTNET_TOKENS,
+    [bitkub.id]: KUB_MAINNET_TOKENS,
     [jbc.id]: JB_CHAIN_TOKENS,
 }
 
