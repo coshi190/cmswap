@@ -4,18 +4,16 @@ Implementation phases and TODO list for cmswap development.
 
 ## Project Status
 
-**Current Phase**: Phase 2 - Swap Feature ✅ (100% complete)
+**Current Phase**: Phase 2 - Swap Feature & Multi-Chain Expansion 🚧 (~60% complete)
 
 - [x] Phase 1: Foundation ✅
-- [x] Phase 2: Swap Feature ✅ (100% complete)
-  - [x] KUB Testnet integration
-  - [x] JB Chain cmswap V3 integration ✅
-  - [x] JB Chain jibswap V2 integration ✅
-  - [x] Multi-DEX quote display ✅
-  - [x] Calculate price difference % vs best price ✅
-  - [x] Highlight best price with trophy/badge ✅
-  - [x] Auto-select best price on refresh ✅
-  - [ ] JB Chain commudao integration (future)
+- [ ] Phase 2: Swap Feature & Multi-Chain Expansion 🚧 (~60% complete)
+  - [x] KUB Testnet integration ✅
+  - [x] JB Chain integration ✅
+  - [ ] KUB Mainnet integration
+  - [ ] Base chain integration
+  - [ ] Worldchain integration
+  - [ ] BSX Chain integration
 - [ ] Phase 3: Earn Feature 🆕
 - [ ] Phase 4: Bridge Feature
 - [ ] Phase 5: Launchpad Feature
@@ -51,10 +49,10 @@ Implementation phases and TODO list for cmswap development.
 
 ---
 
-## Phase 2: Swap Feature (IN PROGRESS 🚧)
+## Phase 2: Swap Feature & Multi-Chain Expansion (IN PROGRESS 🚧)
 
-**Duration**: 1-2 weeks
-**Goal**: Implement multi-DEX swap with direct smart contract integration
+**Duration**: Ongoing
+**Goal**: Implement multi-DEX swap with direct smart contract integration and expand to multiple chains
 
 ### TODO
 
@@ -104,6 +102,100 @@ Implementation phases and TODO list for cmswap development.
   - [x] Price comparison UI ✅
   - [x] Calculate price difference % ✅
   - [x] Auto-select best price on refresh ✅
+
+### Multi-Chain Expansion 🆕
+
+#### KUB Mainnet (Bitkub Chain) 🔧
+
+**Status**: Already configured in wagmi, needs DEX integration
+
+- [ ] Research KUB mainnet DEX ecosystem
+  - [ ] Identify active DEX protocols (Uniswap forks, PancakeSwap, etc.)
+  - [ ] Find factory/router/quoter addresses
+  - [ ] Document mainnet token list (KUB, popular tokens)
+- [ ] Integrate KUB mainnet DEX protocols
+  - [ ] Add to dex-config.ts (V2 or V3 configuration)
+  - [ ] Create token list in lib/tokens.ts
+  - [ ] Add routing configuration (KUB as native token)
+  - [ ] Update chain icon if needed
+- [ ] Test on KUB mainnet
+  - [ ] Quote fetching from DEX protocols
+  - [ ] Swap execution with test amounts
+  - [ ] Multi-hop routing validation
+  - [ ] Gas cost analysis
+
+#### Base Chain 🆕
+
+**Status**: Already configured in wagmi, needs DEX integration
+
+- [ ] Research Base DEX ecosystem
+  - [ ] Identify Uniswap V3 deployment addresses
+  - [ ] Find popular Base tokens (ETH, USDC, USDT, etc.)
+  - [ ] Document gas optimization strategies
+  - [ ] Research other DEXs (1inch, BaseSwap, etc.)
+- [ ] Integrate Base DEX protocols
+  - [ ] Add Uniswap V3 config to dex-config.ts
+  - [ ] Create Base token list with common tokens
+  - [ ] Add routing config (WETH, USDC as intermediaries)
+  - [ ] Update chain metadata and icons
+- [ ] Test on Base
+  - [ ] Quote validation against multiple pools
+  - [ ] Swap execution with real transactions
+  - [ ] Gas cost analysis and optimization
+  - [ ] Multi-hop routing through WETH/USDC
+
+#### Worldchain 🆕
+
+**Status**: Already configured in wagmi, needs DEX integration
+
+- [ ] Research Worldchain DEX ecosystem
+  - [ ] Identify deployed DEX protocols
+  - [ ] Find factory/router/quoter contract addresses
+  - [ ] Document Worldchain token ecosystem
+  - [ ] Research chain-specific features
+- [ ] Integrate Worldchain DEX
+  - [ ] Add DEX configuration to dex-config.ts
+  - [ ] Create Worldchain token list
+  - [ ] Add routing configuration
+  - [ ] Update chain metadata
+- [ ] Test on Worldchain
+  - [ ] Connection and wallet testing
+  - [ ] Quote fetching and validation
+  - [ ] Swap execution with test transactions
+  - [ ] Full swap flow testing
+
+#### BSX Chain 🆕
+
+**Status**: Not configured, needs full setup
+
+- [ ] BSX chain setup
+  - [ ] Define custom chain in lib/wagmi.ts
+  - [ ] Configure RPC URLs
+  - [ ] Add block explorer URL
+  - [ ] Create chain icon (public/chains/bsx.svg)
+  - [ ] Update supportedChains array
+- [ ] Research BSX DEX ecosystem
+  - [ ] Identify available DEX protocols
+  - [ ] Document contract addresses (factory, router, etc.)
+  - [ ] Research BSX-specific tokens
+- [ ] Integrate BSX DEX
+  - [ ] Full DEX configuration (V2/V3) in dex-config.ts
+  - [ ] Token list creation in lib/tokens.ts
+  - [ ] Routing configuration in lib/routing-config.ts
+  - [ ] Update chainMetadata in lib/wagmi.ts
+- [ ] Test on BSX
+  - [ ] Wallet connection testing
+  - [ ] Quote fetching from DEXs
+  - [ ] Swap execution with test amounts
+  - [ ] Multi-hop routing validation
+
+### Chain Expansion Notes
+
+- **Priority Order**: KUB Mainnet → Base → Worldchain → BSX (based on user base and DEX maturity)
+- **Dependencies**: Each chain requires DEX contract addresses before integration can begin
+- **Testing**: All chains should be tested with small amounts before mainnet launch
+- **Token Lists**: Prioritize native token, wrapped native, and top 10-20 tokens by volume
+- **Gas Optimization**: Consider chain-specific gas optimization strategies (especially for Base)
 
 ---
 
