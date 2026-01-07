@@ -30,6 +30,7 @@ export interface UseUniV3SwapExecutionParams {
     deadlineMinutes: number
     fee: number
     route?: SwapRoute
+    skipSimulation?: boolean // Skip simulation during approval phase
 }
 
 export interface UseUniV3SwapExecutionResult {
@@ -56,6 +57,7 @@ export function useUniV3SwapExecution({
     deadlineMinutes,
     fee,
     route,
+    skipSimulation = false,
 }: UseUniV3SwapExecutionParams): UseUniV3SwapExecutionResult {
     const { selectedDex } = useSwapStore()
     const dexConfig = getV3Config(tokenIn.chainId, selectedDex)
@@ -157,6 +159,7 @@ export function useUniV3SwapExecution({
         isNativeInput,
         isNativeOutput,
         route,
+        skipSimulation,
     ])
     const {
         data: simulationData,
@@ -173,7 +176,7 @@ export function useUniV3SwapExecution({
                   value: wrapOperation === 'wrap' ? amountIn : undefined,
                   chainId: tokenIn.chainId,
                   query: {
-                      enabled: amountIn > 0n,
+                      enabled: amountIn > 0n && !skipSimulation,
                   },
               }
             : {
@@ -184,7 +187,7 @@ export function useUniV3SwapExecution({
                   value: contractCall.value,
                   chainId: tokenIn.chainId,
                   query: {
-                      enabled: amountIn > 0n && !!dexConfig,
+                      enabled: amountIn > 0n && !!dexConfig && !skipSimulation,
                   },
               }) as any // eslint-disable-line @typescript-eslint/no-explicit-any -- complex conditional type union
     )

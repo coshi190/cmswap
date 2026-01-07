@@ -187,6 +187,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         deadlineMinutes: settings.deadlineMinutes,
         fee,
         route: bestRoute?.route,
+        skipSimulation: needsApprovalCheck,
     })
     const v2Swap = useUniV2SwapExecution({
         tokenIn: tokenIn ?? tokens[0]!,
@@ -197,6 +198,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         slippage: settings.slippage,
         deadlineMinutes: settings.deadlineMinutes,
         route: bestRoute?.route,
+        skipSimulation: needsApprovalCheck,
     })
     const {
         swap,

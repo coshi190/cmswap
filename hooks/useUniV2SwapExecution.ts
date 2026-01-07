@@ -24,6 +24,7 @@ export interface UseUniV2SwapExecutionParams {
     slippage: number
     deadlineMinutes: number
     route?: SwapRoute
+    skipSimulation?: boolean // Skip simulation during approval phase
 }
 
 export interface UseUniV2SwapExecutionResult {
@@ -49,6 +50,7 @@ export function useUniV2SwapExecution({
     slippage, // eslint-disable-line @typescript-eslint/no-unused-vars -- reserved for future use
     deadlineMinutes,
     route,
+    skipSimulation = false,
 }: UseUniV2SwapExecutionParams): UseUniV2SwapExecutionResult {
     const { selectedDex } = useSwapStore()
     const dexConfig = getV2Config(tokenIn.chainId, selectedDex)
@@ -150,7 +152,16 @@ export function useUniV2SwapExecution({
                 value: undefined,
             }
         }
-    }, [wrapOperation, tokenIn, amountIn, swapParams, isNativeInput, isNativeOutput])
+    }, [
+        wrapOperation,
+        tokenIn,
+        tokenOut,
+        amountIn,
+        swapParams,
+        isNativeInput,
+        isNativeOutput,
+        skipSimulation,
+    ])
     const {
         data: simulationData,
         isLoading: isPreparing,
@@ -166,7 +177,7 @@ export function useUniV2SwapExecution({
                   value: wrapOperation === 'wrap' ? amountIn : undefined,
                   chainId: tokenIn.chainId,
                   query: {
-                      enabled: amountIn > 0n,
+                      enabled: amountIn > 0n && !skipSimulation,
                   },
               }
             : {
@@ -177,7 +188,7 @@ export function useUniV2SwapExecution({
                   value: contractCall.value,
                   chainId: tokenIn.chainId,
                   query: {
-                      enabled: amountIn > 0n && !!dexConfig,
+                      enabled: amountIn > 0n && !!dexConfig && !skipSimulation,
                   },
               }) as any // eslint-disable-line @typescript-eslint/no-explicit-any -- complex conditional type union
     )
