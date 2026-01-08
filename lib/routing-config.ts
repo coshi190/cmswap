@@ -13,7 +13,9 @@ export const INTERMEDIARY_TOKENS: Record<number, IntermediaryConfig> = {
     },
     [bitkub.id]: {
         wrappedNative: '0x67eBD850304c70d983B2d1b93ea79c7CD6c3F6b5' as Address, // KKUB
-        stables: [],
+        stables: [
+            '0x7d984C24d2499D840eB3b7016077164e15E5faA6' as const, // KUSDT
+        ],
         priority: ['0x67eBD850304c70d983B2d1b93ea79c7CD6c3F6b5' as Address], // KKUB
     },
     [jbc.id]: {

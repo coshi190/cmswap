@@ -34,6 +34,17 @@ const FEE_TIER_COMBINATIONS: [number, number][] = [
     [FEE_TIERS.LOW, FEE_TIERS.MEDIUM], // 0.05% + 0.3%
     [FEE_TIERS.MEDIUM, FEE_TIERS.LOW], // 0.3% + 0.05%
     [FEE_TIERS.LOW, FEE_TIERS.LOW], // 0.05% + 0.05%
+    [FEE_TIERS.STABLE, FEE_TIERS.MEDIUM], // 0.01% + 0.3%
+    [FEE_TIERS.STABLE, FEE_TIERS.LOW], // 0.01% + 0.05%
+    [FEE_TIERS.STABLE, FEE_TIERS.HIGH], // 0.01% + 1%
+    [FEE_TIERS.MEDIUM, FEE_TIERS.STABLE], // 0.3% + 0.01%
+    [FEE_TIERS.LOW, FEE_TIERS.STABLE], // 0.05% + 0.01%
+    [FEE_TIERS.HIGH, FEE_TIERS.MEDIUM], // 1% + 0.3%
+    [FEE_TIERS.HIGH, FEE_TIERS.LOW], // 1% + 0.05%
+    [FEE_TIERS.MEDIUM, FEE_TIERS.HIGH], // 0.3% + 1%
+    [FEE_TIERS.LOW, FEE_TIERS.HIGH], // 0.05% + 1%
+    [FEE_TIERS.HIGH, FEE_TIERS.HIGH], // 1% + 1%
+    [FEE_TIERS.STABLE, FEE_TIERS.STABLE], // 0.01% + 0.01%
 ]
 
 interface RouteQuery {
@@ -106,12 +117,7 @@ export function useUniV3MultiHopQuote({
             address: dexConfig?.quoter,
             abi: UNISWAP_V3_QUOTER_V2_ABI,
             functionName: 'quoteExactInput' as const,
-            args: [
-                {
-                    path: encodeV3Path(route.tokens, route.fees),
-                    amountIn,
-                },
-            ],
+            args: [encodeV3Path(route.tokens, route.fees), amountIn],
             chainId,
         })),
         query: {
