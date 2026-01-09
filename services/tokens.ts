@@ -2,7 +2,7 @@ import type { Address } from 'viem'
 import type { Token } from '@/types/tokens'
 import { ERC20_ABI } from '@/lib/abis/erc20'
 import { isNativeToken } from '@/lib/wagmi'
-import { TOKEN_LISTS } from '@/lib/tokens'
+import { TOKEN_LISTS, getAllowanceFunctionName } from '@/lib/tokens'
 
 /**
  * Get native token balance
@@ -48,7 +48,7 @@ export function getTokenAllowanceQuery(
     return {
         address: tokenAddress,
         abi: ERC20_ABI,
-        functionName: 'allowance' as const,
+        functionName: getAllowanceFunctionName(tokenAddress),
         args: [ownerAddress, spenderAddress],
         chainId,
         queryKey: ['allowance', chainId, ownerAddress, tokenAddress, spenderAddress],

@@ -9,6 +9,7 @@ import { getDexConfig, getProtocolSpender } from '@/lib/dex-config'
 import { useSwapStore } from '@/store/swap-store'
 import { ERC20_ABI } from '@/lib/abis/erc20'
 import { isNativeToken } from '@/lib/wagmi'
+import { getAllowanceFunctionName } from '@/lib/tokens'
 
 export interface UseTokenApprovalParams {
     token: Token
@@ -40,7 +41,7 @@ export function useTokenApproval({
     const { data: allowance = 0n, refetch: refetchAllowance } = useReadContract({
         address: token.address as Address,
         abi: ERC20_ABI,
-        functionName: 'allowance',
+        functionName: getAllowanceFunctionName(token.address),
         args: [owner || '0x0', spender || '0x0'],
         chainId: token.chainId,
         query: {
