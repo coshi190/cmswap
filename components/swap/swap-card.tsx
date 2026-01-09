@@ -138,15 +138,38 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
     const isWrapUnwrap = !!wrapOp
     const wrapOperation = wrapOp
     const fee = quoteFee ?? (isV2Protocol ? 3000 : 3000) // Default to 3000 (0.3%) if not set
+    // Track previous values to avoid unnecessary store updates
+    const prevQuoteAmountOutRef = useRef<bigint | null>(null)
+    const prevIsLoadingRef = useRef<boolean>(false)
+
     useEffect(() => {
-        if (bestQuote && tokenOut) {
+        // Only update quote if amountOut actually changed
+        if (bestQuote && tokenOut && bestQuote.amountOut !== prevQuoteAmountOutRef.current) {
+            prevQuoteAmountOutRef.current = bestQuote.amountOut
             setQuote(bestQuote)
+        } else if (!bestQuote) {
+            prevQuoteAmountOutRef.current = null
         }
-        setIsLoading(isQuoteLoading)
+
+        // Only update loading state if it actually changed
+        if (isQuoteLoading !== prevIsLoadingRef.current) {
+            prevIsLoadingRef.current = isQuoteLoading
+            setIsLoading(isQuoteLoading)
+        }
+
         if (isError && error && !isQuoteLoading && !bestQuote && amountInBigInt > 0n) {
             toastError(error, 'Failed to get quote')
         }
-    }, [bestQuote, isQuoteLoading, isError, error, tokenOut, setQuote, setIsLoading])
+    }, [
+        bestQuote,
+        isQuoteLoading,
+        isError,
+        error,
+        tokenOut,
+        setQuote,
+        setIsLoading,
+        amountInBigInt,
+    ])
     const displayAmountOut = useMemo(() => {
         if (isQuoteLoading) return '...'
         if (shouldShowError) return '0'
