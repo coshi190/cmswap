@@ -1,6 +1,6 @@
-# cmswap Documentation
+# CMswap Documentation
 
-Welcome to the cmswap documentation. cmswap is a multi-chain Web3 aggregation platform that enables users to swap tokens across DEXs, bridge assets across chains, and launch new memecoins.
+Welcome to the CMswap documentation. CMswap is a multi-chain Web3 aggregation platform that enables users to swap tokens across DEXs, bridge assets across chains, and launch new memecoins.
 
 ## Quick Links
 
@@ -9,28 +9,11 @@ Welcome to the cmswap documentation. cmswap is a multi-chain Web3 aggregation pl
 | [Architecture](./architecture.md) | System architecture and design decisions |
 | [Roadmap](./roadmap.md) | Implementation phases and TODO |
 
-## Quick Start
-
-```bash
-# Clone the repository
-git clone <repo-url>
-cd cmswap
-
-# Install dependencies
-bun install
-
-# Run development server
-bun run dev
-
-# Build for production
-bun run build
-```
-
 ## Project Overview
 
-cmswap is a Web3 aggregation platform with three core features:
+CMswap is a Web3 aggregation platform with three core features:
 
-1. **Aggregate Swap** - Direct smart contract integration with multi-DEX protocol support (Uniswap V2/V3, Stable, Aggregators)
+1. **Aggregate Swap** - Multi-DEX swap aggregation with real-time price comparison across protocols (CMswap V3, Jibswap V2)
 2. **Cross-Chain Bridge** - Seamless token bridging via LayerZero (coming)
 3. **Memecoin Launchpad** - Token launch platform via Uniswap V4 (coming)
 
@@ -51,7 +34,6 @@ cmswap is a Web3 aggregation platform with three core features:
 | Styling | Tailwind CSS, shadcn/ui |
 | Web3 | wagmi v2, viem v2 |
 | State | Zustand, TanStack Query |
-| Notifications | Sonner |
 | Runtime | Bun |
 | Hosting | Vercel |
 
@@ -91,12 +73,9 @@ cmswap/
 
 ### Environment Variables
 
-Create a `.env.local` file:
+**Not required** - The app works out of the box with public RPCs.
 
-```bash
-# Optional: Alchemy API for enhanced RPC
-NEXT_PUBLIC_ALCHEMY_API_KEY=your_alchemy_key
-```
+Optional `.env.local` for enhanced features:
 
 ### Available Scripts
 
@@ -105,26 +84,33 @@ bun run dev      # Start development server
 bun run build    # Build for production
 bun run start    # Start production server
 bun run lint     # Run ESLint
+bun run clean    # Clean build artifacts (.next, tsconfig.tsbuildinfo)
 bun run test     # Run tests (coming)
 ```
 
 ## Current Implementation
 
-### Phase 2: Swap Feature (In Progress)
+### Phase 2: Swap Feature & Multi-Chain Expansion (~60% complete)
 
-**Implemented:**
-- Multi-DEX protocol abstraction (V2, V3, Stable, Aggregator support)
-- Uniswap V3 integration on KUB Testnet
-- Wallet connection with multi-chain support
-- Token selection and balance display
-- Price quotes with pool liquidity detection
-- Swap execution with simulation
-- Transaction tracking with block explorer links
+**Live:**
+- Multi-DEX swap aggregation (CMswap V3, Jibswap V2)
+- Multi-hop routing for best prices
+- Real-time quotes from all DEXs with price comparison
+- DEX auto-select best price
+- KUB Testnet integration (CMswap V3)
+- JB Chain integration (CMswap V3 + Jibswap V2)
+- KUB Mainnet integration (CMswap V3)
+- Wallet connection with 6 chains
+- Token approval flow
+- Slippage protection (0.1%, 0.5%, 1%, custom)
+- Transaction deadline settings
+- Transaction simulation before execution
+- Wrap/unwrap native tokens
 
-**Pending:**
-- Multi-DEX price comparison
-- Testing on KUB testnet
-- Additional DEX integrations
+**In Progress:**
+- Base chain integration
+- Worldchain integration
+- BSX Chain integration
 
 ## Contributing
 

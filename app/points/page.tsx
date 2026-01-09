@@ -14,7 +14,7 @@ export default function PointsPage() {
                     <h1 className="text-4xl font-bold">Points</h1>
                     <p className="text-muted-foreground">
                         Earn points, complete quests, and climb the leaderboard. Coming soon in
-                        Phase 7.
+                        Phase 6.
                     </p>
                 </div>
             </div>

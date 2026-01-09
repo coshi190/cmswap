@@ -1,6 +1,6 @@
-# cmswap Roadmap
+# CMswap Roadmap
 
-Implementation phases and TODO list for cmswap development.
+Implementation phases and TODO list for CMswap development.
 
 ## Project Status
 
@@ -14,11 +14,11 @@ Implementation phases and TODO list for cmswap development.
   - [ ] Base chain integration
   - [ ] Worldchain integration
   - [ ] BSX Chain integration
-- [ ] Phase 3: Earn Feature 🆕
+- [ ] Phase 3: Earn Feature
 - [ ] Phase 4: Bridge Feature
 - [ ] Phase 5: Launchpad Feature
-- [ ] Phase 6: Polish & Optimization
-- [ ] Phase 7: Points Feature 🆕
+- [ ] Phase 6: Points Feature
+- [ ] Phase 7: Polish & Optimization
 - [ ] Phase 8: Advanced Features (Post-MVP)
 
 ---
@@ -57,7 +57,7 @@ Implementation phases and TODO list for cmswap development.
 ### TODO
 
 - [x] Research KUB testnet DEX ecosystem ✅
-  - [x] Found cmswap (Uniswap V3 fork) ✅
+  - [x] Found CMswap (Uniswap V3 fork) ✅
   - [x] Identified testnet tokens (KUB, tKKUB, testKUB, testToken) ✅
 - [x] Create `lib/abis/` with ERC20 and Uniswap V3 ABIs ✅
 - [x] Create `lib/dex-config.ts` with multi-DEX protocol support ✅
@@ -81,13 +81,13 @@ Implementation phases and TODO list for cmswap development.
 - [x] Test on KUB testnet with faucet tokens ✅
 - [x] Add error handling and user feedback (Sonner toasts) ✅
 
-### JB Chain Expansion Tasks 🆕
+### JB Chain Expansion Tasks
 
 - [x] Research and document JB Chain DEX ecosystem ✅
-  - [x] Verify cmswap V3 contract addresses on JBC
+  - [x] Verify CMswap V3 contract addresses on JBC
   - [x] Verify jibswap V2 contract addresses on JBC
   - [x] Document JB Chain token list
-- [x] Implement cmswap V3 on JBC ✅
+- [x] Implement CMswap V3 on JBC ✅
   - [x] Add V3 config for JBC in dex-config.ts
   - [x] Add JB Chain token list with native/wrapped tokens
   - [x] Implement dynamic chain switching in swap UI
@@ -103,7 +103,7 @@ Implementation phases and TODO list for cmswap development.
   - [x] Calculate price difference % ✅
   - [x] Auto-select best price on refresh ✅
 
-### Multi-Chain Expansion 🆕
+### Multi-Chain Expansion
 
 #### KUB Mainnet (Bitkub Chain) ✅
 
@@ -124,7 +124,7 @@ Implementation phases and TODO list for cmswap development.
   - [ ] Multi-hop routing validation
   - [ ] Gas cost analysis
 
-#### Base Chain 🆕
+#### Base Chain
 
 **Status**: Already configured in wagmi, needs DEX integration
 
@@ -144,7 +144,7 @@ Implementation phases and TODO list for cmswap development.
   - [ ] Gas cost analysis and optimization
   - [ ] Multi-hop routing through WETH/USDC
 
-#### Worldchain 🆕
+#### Worldchain
 
 **Status**: Already configured in wagmi, needs DEX integration
 
@@ -164,7 +164,7 @@ Implementation phases and TODO list for cmswap development.
   - [ ] Swap execution with test transactions
   - [ ] Full swap flow testing
 
-#### BSX Chain 🆕
+#### BSX Chain
 
 **Status**: Not configured, needs full setup
 
@@ -199,7 +199,7 @@ Implementation phases and TODO list for cmswap development.
 
 ---
 
-## Phase 3: Earn Feature 🆕
+## Phase 3: Earn Feature
 
 **Duration**: 2-3 weeks
 **Goal**: Implement staking, liquidity mining, and yield farming
@@ -463,44 +463,7 @@ types/
 
 ---
 
-## Phase 6: Polish & Optimization
-
-**Duration**: 1-2 weeks
-**Goal**: Production-ready features
-
-### Performance
-
-- [ ] Code splitting optimization
-- [ ] Lazy loading for components
-- [ ] Image optimization
-- [ ] Bundle size reduction
-- [ ] Load time optimization
-
-### Testing
-
-- [ ] Unit tests (Vitest)
-- [ ] Integration tests
-- [ ] E2E tests (Playwright)
-- [ ] Contract tests (Foundry)
-- [ ] Fuzzing tests
-
-### Security
-
-- [ ] Dependency audit
-- [ ] Smart contract audit
-- [ ] Penetration testing
-- [ ] Bug bounty setup
-
-### Analytics
-
-- [ ] Event tracking
-- [ ] Funnel analysis
-- [ ] Error monitoring
-- [ ] Performance monitoring
-
----
-
-## Phase 7: Points Feature 🆕
+## Phase 6: Points Feature
 
 **Duration**: 1-2 weeks
 **Goal**: Implement user rewards, referral system, and gamification
@@ -609,6 +572,43 @@ POST /api/quests/complete      # Complete quest
 
 ---
 
+## Phase 7: Polish & Optimization
+
+**Duration**: 1-2 weeks
+**Goal**: Production-ready features
+
+### Performance
+
+- [ ] Code splitting optimization
+- [ ] Lazy loading for components
+- [ ] Image optimization
+- [ ] Bundle size reduction
+- [ ] Load time optimization
+
+### Testing
+
+- [ ] Unit tests (Vitest)
+- [ ] Integration tests
+- [ ] E2E tests (Playwright)
+- [ ] Contract tests (Foundry)
+- [ ] Fuzzing tests
+
+### Security
+
+- [ ] Dependency audit
+- [ ] Smart contract audit
+- [ ] Penetration testing
+- [ ] Bug bounty setup
+
+### Analytics
+
+- [ ] Event tracking
+- [ ] Funnel analysis
+- [ ] Error monitoring
+- [ ] Performance monitoring
+
+---
+
 ## Phase 8: Advanced Features (Post-MVP)
 
 ### Additional Chains
@@ -658,13 +658,6 @@ POST /api/quests/complete      # Complete quest
 - [ ] WalletConnect deep linking
 - [ ] Push notifications
 
-### Staking & Yield
-
-- [ ] Staking pool
-- [ ] Yield farming
-- [ ] Liquidity mining
-- [ ] Rewards distribution
-
 ### Social Features
 
 - [ ] User profiles
@@ -683,8 +676,8 @@ POST /api/quests/complete      # Complete quest
 | Phase 3 | 2-3 weeks | TBD | TBD | 🆕 Earn
 | Phase 4 | 1-2 weeks | TBD | TBD |
 | Phase 5 | 2 weeks | TBD | TBD |
-| Phase 6 | 1-2 weeks | TBD | TBD |
-| Phase 7 | 1-2 weeks | TBD | TBD | 🆕 Points
+| Phase 6 | 1-2 weeks | TBD | TBD | 🆕 Points
+| Phase 7 | 1-2 weeks | TBD | TBD | Polish & Optimization
 | **MVP Total** | **8-11 weeks** | **TBD** | **TBD** |
 | Phase 8 | Post-MVP | TBD | TBD |
 
