@@ -31,4 +31,22 @@ export const DEX_REGISTRY: Record<string, DEXMetadata> = {
         displayName: 'Commudao',
         description: 'Custom AMM',
     },
+    udonswap: {
+        id: 'udonswap',
+        name: 'udonswap',
+        displayName: 'UdonSwap',
+        description: 'Uniswap V2 DEX',
+    },
+    ponder: {
+        id: 'ponder',
+        name: 'ponder',
+        displayName: 'Ponder Finance',
+        description: 'Uniswap V2 DEX',
+    },
+    diamon: {
+        id: 'diamon',
+        name: 'diamon',
+        displayName: 'Diamon Finance',
+        description: 'Uniswap V2 DEX',
+    },
 }

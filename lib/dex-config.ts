@@ -157,6 +157,54 @@ export const DEX_CONFIGS_REGISTRY: Record<DEXType, DEXConfiguration> = {
             },
         },
     },
+    udonswap: {
+        dexId: 'udonswap',
+        defaultProtocol: ProtocolType.V2,
+        priority: 3,
+        protocols: {
+            [bitkub.id]: {
+                [ProtocolType.V2]: {
+                    protocolType: ProtocolType.V2,
+                    chainId: bitkub.id,
+                    enabled: true,
+                    factory: '0x18c7a4CA020A0c648976208dF2e3AE1BAA32e8d1' as Address,
+                    router: '0x7aA32A818cD3a6BcdF827f6a411B7adFF56e7A4A' as Address,
+                },
+            },
+        },
+    },
+    ponder: {
+        dexId: 'ponder',
+        defaultProtocol: ProtocolType.V2,
+        priority: 4,
+        protocols: {
+            [bitkub.id]: {
+                [ProtocolType.V2]: {
+                    protocolType: ProtocolType.V2,
+                    chainId: bitkub.id,
+                    enabled: true,
+                    factory: '0x20B17e92Dd1866eC647ACaA38fe1f7075e4B359E' as Address,
+                    router: '0xD19C5cebFa9A8919Cc3db2F19163089feBd9604E' as Address,
+                },
+            },
+        },
+    },
+    diamon: {
+        dexId: 'diamon',
+        defaultProtocol: ProtocolType.V2,
+        priority: 5,
+        protocols: {
+            [bitkub.id]: {
+                [ProtocolType.V2]: {
+                    protocolType: ProtocolType.V2,
+                    chainId: bitkub.id,
+                    enabled: true,
+                    factory: '0x6E906Dc4749642a456907deCB323A0065dC6F26E' as Address,
+                    router: '0xAb30a29168D792c5e6a54E4bcF1Aec926a3b20FA' as Address,
+                },
+            },
+        },
+    },
 }
 
 /**
