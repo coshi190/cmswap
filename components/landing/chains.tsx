@@ -5,12 +5,10 @@ const liveChains = [
     { name: 'JB Chain', icon: '/chains/jbchain.png' },
     { name: 'KUB Chain', icon: '/chains/kubchain.png' },
     { name: 'Worldchain', icon: '/chains/worldchain.svg' },
+    { name: 'Base', icon: '/chains/base.svg' },
 ]
 
-const comingSoonChains = [
-    { name: 'Base', icon: '/chains/base.svg' },
-    { name: 'BNB Chain', icon: '/chains/bnbchain.svg' },
-]
+const comingSoonChains = [{ name: 'BNB Chain', icon: '/chains/bnbchain.svg' }]
 
 export function Chains() {
     return (
@@ -18,7 +16,7 @@ export function Chains() {
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 <div className="mx-auto max-w-2xl text-center">
                     <h2 className="text-2xl font-bold sm:text-3xl">Multi-Chain Support</h2>
-                    <p className="mt-4 text-gray-400">Live on 4 chains, with 2 more coming soon</p>
+                    <p className="mt-4 text-gray-400">Live on 5 chains, with 1 more coming soon</p>
                 </div>
 
                 {/* Live Now Section */}

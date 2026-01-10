@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import type { DEXType } from '@/types/dex'
-import { kubTestnet, jbc, bitkub, worldchain } from './wagmi'
+import { kubTestnet, jbc, bitkub, worldchain, base } from './wagmi'
 
 /**
  * Protocol types supported by the DEX system
@@ -153,6 +153,18 @@ export const DEX_CONFIGS_REGISTRY: Record<DEXType, DEXConfiguration> = {
                     factory: '0x7a5028BDa40e7B173C278C5342087826455ea25a' as Address,
                     quoter: '0x10158D43e6cc414deE1Bd1eB0EfC6a5cBCfF244c' as Address,
                     swapRouter: '0x091AD9e2e6e5eD44c1c66dB50e49A601F9f36cF6' as Address,
+                    feeTiers: [FEE_TIERS.STABLE, FEE_TIERS.LOW, FEE_TIERS.MEDIUM, FEE_TIERS.HIGH],
+                    defaultFeeTier: FEE_TIERS.MEDIUM,
+                },
+            },
+            [base.id]: {
+                [ProtocolType.V3]: {
+                    protocolType: ProtocolType.V3,
+                    chainId: base.id,
+                    enabled: true,
+                    factory: '0x33128a8fC17869897dcE68Ed026d694621f6FDfD' as Address,
+                    quoter: '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a' as Address,
+                    swapRouter: '0x2626664c2603336E57B271c5C0b26F421741e481' as Address,
                     feeTiers: [FEE_TIERS.STABLE, FEE_TIERS.LOW, FEE_TIERS.MEDIUM, FEE_TIERS.HIGH],
                     defaultFeeTier: FEE_TIERS.MEDIUM,
                 },
@@ -487,10 +499,10 @@ export const COMMON_FEE_TIERS = [
 
 /**
  * Get the default DEX for a given chain
- * Returns 'uniswap' for Worldchain (uses actual Uniswap V3)
+ * Returns 'uniswap' for Worldchain and Base (uses actual Uniswap V3)
  * Returns 'cmswap' for other chains (uses forked/custom deployments)
  */
 export function getDefaultDexForChain(chainId: number): DEXType {
-    if (chainId === worldchain.id) return 'uniswap'
+    if (chainId === worldchain.id || chainId === base.id) return 'uniswap'
     return 'cmswap'
 }

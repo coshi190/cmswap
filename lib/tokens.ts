@@ -1,6 +1,6 @@
 import type { Token } from '@/types/tokens'
 import type { Address } from 'viem'
-import { kubTestnet, jbc, bitkub, worldchain, isNativeToken } from './wagmi'
+import { kubTestnet, jbc, bitkub, worldchain, base, isNativeToken } from './wagmi'
 
 export const KUSDT_ADDRESS = '0x7d984C24d2499D840eB3b7016077164e15E5faA6' as const
 
@@ -193,7 +193,7 @@ export const WORLDCHAIN_TOKENS: Token[] = [
     {
         address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' as const,
         symbol: 'ETH',
-        name: 'Ether',
+        name: 'ETH',
         decimals: 18,
         chainId: worldchain.id,
         logo: 'https://raw.githubusercontent.com/SmolDapp/tokenAssets/refs/heads/main/tokens/8453/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee/logo-32.png',
@@ -201,7 +201,7 @@ export const WORLDCHAIN_TOKENS: Token[] = [
     {
         address: '0x4200000000000000000000000000000000000006' as const,
         symbol: 'WETH',
-        name: 'Wrapped Ether',
+        name: 'Wrapped ETH',
         decimals: 18,
         chainId: worldchain.id,
         logo: 'https://coin-images.coingecko.com/coins/images/39810/large/weth.png?1724139790',
@@ -256,6 +256,81 @@ export const WORLDCHAIN_TOKENS: Token[] = [
     },
 ]
 
+export const BASE_TOKENS: Token[] = [
+    {
+        address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' as const,
+        symbol: 'ETH',
+        name: 'ETH',
+        decimals: 18,
+        chainId: base.id,
+        logo: 'https://raw.githubusercontent.com/SmolDapp/tokenAssets/refs/heads/main/tokens/8453/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee/logo-32.png',
+    },
+    {
+        address: '0x4200000000000000000000000000000000000006' as const,
+        symbol: 'WETH',
+        name: 'Wrapped ETH',
+        decimals: 18,
+        chainId: base.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/39810/large/weth.png?1724139790',
+    },
+    {
+        address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as const,
+        symbol: 'USDC',
+        name: 'USDC',
+        decimals: 6,
+        chainId: base.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/6319/large/usdc.png?1696506694',
+    },
+    {
+        address: '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf' as const,
+        symbol: 'cbBTC',
+        name: 'cbBTC',
+        decimals: 8,
+        chainId: base.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/40143/large/cbbtc.webp?1726136727',
+    },
+    {
+        address: '0x940181a94A35A4569E4529A3CDfB74e38FD98631' as const,
+        symbol: 'AERO',
+        name: 'AERO',
+        decimals: 18,
+        chainId: base.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/31745/large/token.png?1696530564',
+    },
+    {
+        address: '0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b' as const,
+        symbol: 'VIRTUAL',
+        name: 'VIRTUAL',
+        decimals: 18,
+        chainId: base.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/34057/large/LOGOMARK.png?1708356054',
+    },
+    {
+        address: '0x1111111111166b7FE7bd91427724B487980aFc69' as const,
+        symbol: 'ZORA',
+        name: 'ZORA',
+        decimals: 18,
+        chainId: base.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/54693/large/zora.jpg?1741094751',
+    },
+    {
+        address: '0x696F9436B67233384889472Cd7cD58A6fB5DF4f1' as const,
+        symbol: 'AVNT',
+        name: 'AVNT',
+        decimals: 18,
+        chainId: base.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/68972/large/avnt-token.png?1757134448',
+    },
+    {
+        address: '0x1bc0c42215582d5A085795f4baDbaC3ff36d1Bcb' as const,
+        symbol: 'CLANKER',
+        name: 'CLANKER',
+        decimals: 18,
+        chainId: base.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/51440/large/CLANKER.png?1731232869',
+    },
+]
+
 /**
  * Token list by chain ID
  */
@@ -264,6 +339,7 @@ export const TOKEN_LISTS: Record<number, Token[]> = {
     [bitkub.id]: KUB_MAINNET_TOKENS,
     [jbc.id]: JB_CHAIN_TOKENS,
     [worldchain.id]: WORLDCHAIN_TOKENS,
+    [base.id]: BASE_TOKENS,
 }
 
 /**

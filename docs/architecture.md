@@ -1,7 +1,7 @@
 # CMswap Architecture
 
 > **Version**: 0.2.4
-> **Status**: Multi-DEX Swap Aggregation Live (5 DEXs, 3 Chains Active)
+> **Status**: Multi-DEX Swap Aggregation Live (6 DEXs, 5 Chains Active)
 
 ---
 
@@ -35,9 +35,9 @@ CMswap is a Web3 application built with Next.js featuring multi-DEX swap aggrega
           │                   │                   │
 ┌─────────────────────────────────────────────────────────────┐
 │  Chains: KUB Testnet, KUB Mainnet, JBC, BSC, Base, Worldchain│
-│  DEXs: CMswap (V3), Jibswap (V2), UdonSwap (V2), Ponder (V2), Diamon (V2)│
-│  Active: KUB Testnet, KUB Mainnet, JBC                       │
-│  Coming: BSC, Base, Worldchain                               │
+│  DEXs: CMswap (V3), Jibswap (V2), UdonSwap (V2), Ponder (V2), Diamon (V2), Uniswap (V3)│
+│  Active: KUB Testnet, KUB Mainnet, JBC, Worldchain, Base     │
+│  Coming: BSC                                                  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -126,9 +126,9 @@ components/
 | KUB Testnet | 25925 | rpc-testnet.bitkubchain.io | testnet.bkcscan.com | ✅ Active |
 | KUB Mainnet | 96 | rpc.bitkubchain.io | bkcscan.com | ✅ Active |
 | JBC Chain | 8899 | rpc-l1.jibchain.net | exp-l1.jibchain.net | ✅ Active |
+| Base | 8453 | mainnet.base.org | basescan.org | ✅ Active |
+| Worldchain | 480 | worldchain-mainnet.g.alchemy.com/public | worldchain-mainnet.explorer.alchemy.com | ✅ Active |
 | BNB Chain | 56 | 56.rpc.thirdweb.com | bscscan.com | 🟡 Configured |
-| Base | 8453 | mainnet.base.org | basescan.org | 🟡 Configured |
-| Worldchain | 480 | worldchain-mainnet.g.alchemy.com/public | worldchain-mainnet.explorer.alchemy.com | 🟡 Configured |
 
 **Config**: `lib/wagmi.ts`
 
@@ -149,6 +149,7 @@ User clicks "Connect Wallet"
 | DEX | Priority | Protocol | Chains | Status |
 |-----|----------|----------|--------|--------|
 | CMswap | 1 | Uniswap V3 | KUB Testnet, JBC, KUB Mainnet | ✅ Active |
+| Uniswap | 1 | Uniswap V3 | Worldchain, Base | ✅ Active |
 | Jibswap | 2 | Uniswap V2 | JBC | ✅ Active |
 | UdonSwap | 3 | Uniswap V2 | KUB Mainnet | ✅ Active |
 | Ponder Finance | 4 | Uniswap V2 | KUB Mainnet | ✅ Active |
@@ -171,6 +172,12 @@ User clicks "Connect Wallet"
 - UdonSwap (V2): Factory `0x18c7a4CA020A0c648976208dF2e3AE1BAA32e8d1`, Router `0x7aA32A818cD3a6BcdF827f6a411B7adFF56e7A4A`
 - Ponder Finance (V2): Factory `0x20B17e92Dd1866eC6747ACaA38fe1f7075e4B359E`, Router `0xD19C5cebFa9A8919Cc3db2F19163089feBd9604E`
 - Diamon Finance (V2): Factory `0x6E906Dc4749642a456907deCB323A0065dC6F26E`, Router `0xAb30a29168D792c5e6a54E4bcF1Aec926a3b20FA`
+
+**Worldchain**:
+- Uniswap (V3): Factory `0x7a5028BDa40e7B173C278C5342087826455ea25a`, Quoter `0x10158D43e6cc414deE1Bd1eB0EfC6a5cBCfF244c`, Router `0x091AD9e2e6e5eD44c1c66dB50e49A601F9f36cF6`
+
+**Base**:
+- Uniswap (V3): Factory `0x33128a8fC17869897dcE68Ed026d694621f6FDfD`, Quoter `0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a`, Router `0x2626664c2603336E57B271c5C0b26F421741e481`
 
 ---
 
