@@ -1,13 +1,13 @@
 'use client'
 
 import { useChainId, useSwitchChain } from 'wagmi'
-import { kubTestnet, jbc, bitkub, worldchain, base } from '@/lib/wagmi'
+import { kubTestnet, jbc, bitkub, worldchain, base, bsc } from '@/lib/wagmi'
 import { Button } from '@/components/ui/button'
 import { SwapCard } from '@/components/swap/swap-card'
 import { DexSelectCard } from '@/components/swap/dex-select-card'
 import { Suspense } from 'react'
 
-const SWAP_SUPPORTED_CHAINS = [kubTestnet, bitkub, jbc, worldchain, base] as const
+const SWAP_SUPPORTED_CHAINS = [kubTestnet, bitkub, jbc, worldchain, base, bsc] as const
 
 export default function SwapPage() {
     return (

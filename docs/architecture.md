@@ -1,7 +1,7 @@
 # CMswap Architecture
 
-> **Version**: 0.2.4
-> **Status**: Multi-DEX Swap Aggregation Live (6 DEXs, 5 Chains Active)
+> **Version**: 0.2.5
+> **Status**: Multi-DEX Swap Aggregation Live (7 DEXs, 6 Chains Active)
 
 ---
 
@@ -35,9 +35,8 @@ CMswap is a Web3 application built with Next.js featuring multi-DEX swap aggrega
           │                   │                   │
 ┌─────────────────────────────────────────────────────────────┐
 │  Chains: KUB Testnet, KUB Mainnet, JBC, BSC, Base, Worldchain│
-│  DEXs: CMswap (V3), Jibswap (V2), UdonSwap (V2), Ponder (V2), Diamon (V2), Uniswap (V3)│
-│  Active: KUB Testnet, KUB Mainnet, JBC, Worldchain, Base     │
-│  Coming: BSC                                                  │
+│  DEXs: CMswap (V3), Jibswap (V2), UdonSwap (V2), Ponder (V2), Diamon (V2), Uniswap (V3), PancakeSwap (V3)│
+│  Active: KUB Testnet, KUB Mainnet, JBC, Worldchain, Base, BSC│
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -128,7 +127,7 @@ components/
 | JBC Chain | 8899 | rpc-l1.jibchain.net | exp-l1.jibchain.net | ✅ Active |
 | Base | 8453 | mainnet.base.org | basescan.org | ✅ Active |
 | Worldchain | 480 | worldchain-mainnet.g.alchemy.com/public | worldchain-mainnet.explorer.alchemy.com | ✅ Active |
-| BNB Chain | 56 | 56.rpc.thirdweb.com | bscscan.com | 🟡 Configured |
+| BNB Chain | 56 | 56.rpc.thirdweb.com | bscscan.com | ✅ Active |
 
 **Config**: `lib/wagmi.ts`
 
@@ -150,6 +149,7 @@ User clicks "Connect Wallet"
 |-----|----------|----------|--------|--------|
 | CMswap | 1 | Uniswap V3 | KUB Testnet, JBC, KUB Mainnet | ✅ Active |
 | Uniswap | 1 | Uniswap V3 | Worldchain, Base | ✅ Active |
+| PancakeSwap | 1 | PancakeSwap V3 | BSC | ✅ Active |
 | Jibswap | 2 | Uniswap V2 | JBC | ✅ Active |
 | UdonSwap | 3 | Uniswap V2 | KUB Mainnet | ✅ Active |
 | Ponder Finance | 4 | Uniswap V2 | KUB Mainnet | ✅ Active |
@@ -178,6 +178,10 @@ User clicks "Connect Wallet"
 
 **Base**:
 - Uniswap (V3): Factory `0x33128a8fC17869897dcE68Ed026d694621f6FDfD`, Quoter `0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a`, Router `0x2626664c2603336E57B271c5C0b26F421741e481`
+
+**BSC (BNB Chain)**:
+- PancakeSwap (V3): Factory `0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865`, Quoter `0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997`, Router `0x1b81D678ffb9C0263b24A97847620C99d213eB14`
+- Fee Tiers: 100, 500, 2500, 10000 (NOTE: PancakeSwap uses 0.25% (2500) instead of Uniswap's 0.3% (3000))
 
 ---
 
@@ -209,12 +213,12 @@ User inputs amount
 
 ### Features
 
-- Multi-DEX quotes with price comparison across 5 DEXs
+- Multi-DEX quotes with price comparison across 7 DEXs
 - Auto-select best DEX (optional)
 - Multi-hop routing for better rates
 - Slippage protection (0.1%, 0.5%, 1%, custom)
 - Transaction deadline settings
-- Wrap/unwrap native tokens
+- Wrap/unwrap native tokens (KUB↔KKUB, BNB↔WBNB, JBC↔WJBC, ETH↔WETH)
 - Transaction simulation before execution
 - Shareable swap links (URL parameter sync)
 - Batch RPC calls for efficient balance fetching
@@ -234,14 +238,16 @@ User inputs amount
       ├─> Jibswap V2: Direct + Multi-hop routes
       ├─> UdonSwap V2: Direct + Multi-hop routes
       ├─> Ponder Finance V2: Direct + Multi-hop routes
-      └─> Diamon Finance V2: Direct + Multi-hop routes
+      ├─> Diamon Finance V2: Direct + Multi-hop routes
+      ├─> Uniswap V3: Direct + Multi-hop routes
+      └─> PancakeSwap V3: Direct + Multi-hop routes
   └─> Compare outputs, calculate % difference
   └─> Auto-select best price (if enabled)
   └─> DexSelectCard: Show all options with comparison
   └─> User clicks Swap → Execute with selected DEX
 ```
 
-**Priority Order**: CMswap (1) → Jibswap (2) → UdonSwap (3) → Ponder Finance (4) → Diamon Finance (5)
+**Priority Order**: CMswap (1) → Uniswap (1) → PancakeSwap (1) → Jibswap (2) → UdonSwap (3) → Ponder Finance (4) → Diamon Finance (5)
 
 **Config**: `lib/dex-config.ts` - Priority-based DEX registry
 

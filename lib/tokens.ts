@@ -1,6 +1,6 @@
 import type { Token } from '@/types/tokens'
 import type { Address } from 'viem'
-import { kubTestnet, jbc, bitkub, worldchain, base, isNativeToken } from './wagmi'
+import { kubTestnet, jbc, bitkub, worldchain, base, bsc, isNativeToken } from './wagmi'
 
 export const KUSDT_ADDRESS = '0x7d984C24d2499D840eB3b7016077164e15E5faA6' as const
 
@@ -331,6 +331,41 @@ export const BASE_TOKENS: Token[] = [
     },
 ]
 
+export const BSC_TOKENS: Token[] = [
+    {
+        address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' as const,
+        symbol: 'BNB',
+        name: 'BNB',
+        decimals: 18,
+        chainId: bsc.id,
+        logo: 'https://raw.githubusercontent.com/SmolDapp/tokenAssets/refs/heads/main/tokens/56/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee/logo-32.png',
+    },
+    {
+        address: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c' as const,
+        symbol: 'WBNB',
+        name: 'Wrapped BNB',
+        decimals: 18,
+        chainId: bsc.id,
+        logo: 'https://cmswap.mypinata.cloud/ipfs/bafkreihej2whwsw4p57ayfqxhwijnpmgxtnwhngh5f5pxpvxw73s636hzy',
+    },
+    {
+        address: '0x55d398326f99059fF775485246999027B3197955' as const,
+        symbol: 'USDT',
+        name: 'USDT',
+        decimals: 18,
+        chainId: bsc.id,
+        logo: 'https://cmswap.mypinata.cloud/ipfs/bafkreieg7yf6iwx7obygg62hz252bwnaddedanvlizonaawagk7eze4qcu',
+    },
+    {
+        address: '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c' as const,
+        symbol: 'BTCB',
+        name: 'Bitcoin BEP2',
+        decimals: 18,
+        chainId: bsc.id,
+        logo: 'https://cmswap.mypinata.cloud/ipfs/bafkreibdegct4vlxyb7k2vsyt6dn3ulo2xslegjkttvge73244rvshxiju',
+    },
+]
+
 /**
  * Token list by chain ID
  */
@@ -340,6 +375,7 @@ export const TOKEN_LISTS: Record<number, Token[]> = {
     [jbc.id]: JB_CHAIN_TOKENS,
     [worldchain.id]: WORLDCHAIN_TOKENS,
     [base.id]: BASE_TOKENS,
+    [bsc.id]: BSC_TOKENS,
 }
 
 /**

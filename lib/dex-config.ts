@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import type { DEXType } from '@/types/dex'
-import { kubTestnet, jbc, bitkub, worldchain, base } from './wagmi'
+import { kubTestnet, jbc, bitkub, worldchain, base, bsc } from './wagmi'
 
 /**
  * Protocol types supported by the DEX system
@@ -88,6 +88,17 @@ export const FEE_TIERS = {
     STABLE: 100, // 0.01%
     LOW: 500, // 0.05%
     MEDIUM: 3000, // 0.3% (standard)
+    HIGH: 10000, // 1%
+} as const
+
+/**
+ * Fee tiers for PancakeSwap V3 pools
+ * NOTE: PancakeSwap uses 0.25% (2500) instead of Uniswap's 0.3% (3000)
+ */
+export const PANCAKESWAP_FEE_TIERS = {
+    STABLE: 100, // 0.01%
+    LOW: 500, // 0.05%
+    MEDIUM: 2500, // 0.25% (PancakeSwap standard - different from Uniswap!)
     HIGH: 10000, // 1%
 } as const
 
@@ -232,6 +243,30 @@ export const DEX_CONFIGS_REGISTRY: Record<DEXType, DEXConfiguration> = {
                     enabled: true,
                     factory: '0x6E906Dc4749642a456907deCB323A0065dC6F26E' as Address,
                     router: '0xAb30a29168D792c5e6a54E4bcF1Aec926a3b20FA' as Address,
+                },
+            },
+        },
+    },
+    pancakeswap: {
+        dexId: 'pancakeswap',
+        defaultProtocol: ProtocolType.V3,
+        priority: 1,
+        protocols: {
+            [bsc.id]: {
+                [ProtocolType.V3]: {
+                    protocolType: ProtocolType.V3,
+                    chainId: bsc.id,
+                    enabled: true,
+                    factory: '0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865' as Address,
+                    quoter: '0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997' as Address,
+                    swapRouter: '0x1b81D678ffb9C0263b24A97847620C99d213eB14' as Address,
+                    feeTiers: [
+                        PANCAKESWAP_FEE_TIERS.STABLE,
+                        PANCAKESWAP_FEE_TIERS.LOW,
+                        PANCAKESWAP_FEE_TIERS.MEDIUM,
+                        PANCAKESWAP_FEE_TIERS.HIGH,
+                    ],
+                    defaultFeeTier: PANCAKESWAP_FEE_TIERS.MEDIUM,
                 },
             },
         },
@@ -499,10 +534,12 @@ export const COMMON_FEE_TIERS = [
 
 /**
  * Get the default DEX for a given chain
+ * Returns 'pancakeswap' for BSC (uses PancakeSwap V3)
  * Returns 'uniswap' for Worldchain and Base (uses actual Uniswap V3)
  * Returns 'cmswap' for other chains (uses forked/custom deployments)
  */
 export function getDefaultDexForChain(chainId: number): DEXType {
+    if (chainId === bsc.id) return 'pancakeswap'
     if (chainId === worldchain.id || chainId === base.id) return 'uniswap'
     return 'cmswap'
 }

@@ -6,9 +6,8 @@ const liveChains = [
     { name: 'KUB Chain', icon: '/chains/kubchain.png' },
     { name: 'Worldchain', icon: '/chains/worldchain.svg' },
     { name: 'Base', icon: '/chains/base.svg' },
+    { name: 'BNB Chain', icon: '/chains/bnbchain.svg' },
 ]
-
-const comingSoonChains = [{ name: 'BNB Chain', icon: '/chains/bnbchain.svg' }]
 
 export function Chains() {
     return (
@@ -16,10 +15,8 @@ export function Chains() {
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 <div className="mx-auto max-w-2xl text-center">
                     <h2 className="text-2xl font-bold sm:text-3xl">Multi-Chain Support</h2>
-                    <p className="mt-4 text-gray-400">Live on 5 chains, with 1 more coming soon</p>
+                    <p className="mt-4 text-gray-400">Live on 6 chains</p>
                 </div>
-
-                {/* Live Now Section */}
                 <div className="mx-auto mt-10">
                     <div className="mb-4 text-center">
                         <span className="inline-flex items-center rounded-full bg-primary/20 px-3 py-1 text-sm font-medium text-primary">
@@ -40,31 +37,6 @@ export function Chains() {
                                     />
                                 </div>
                                 <span className="text-xs text-gray-300">{chain.name}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Coming Soon Section */}
-                <div className="mx-auto mt-10">
-                    <div className="mb-4 text-center">
-                        <span className="inline-flex items-center rounded-full bg-yellow-500/20 px-3 py-1 text-sm font-medium text-yellow-500">
-                            Coming Soon
-                        </span>
-                    </div>
-                    <div className="mx-auto grid max-w-xl grid-cols-2 gap-5">
-                        {comingSoonChains.map((chain) => (
-                            <div key={chain.name} className="flex flex-col items-center gap-2">
-                                <div className="h-12 w-12 flex items-center justify-center shadow-lg opacity-60">
-                                    <Image
-                                        src={chain.icon}
-                                        alt={chain.name}
-                                        width={32}
-                                        height={32}
-                                        className="h-8 w-8"
-                                    />
-                                </div>
-                                <span className="text-xs text-gray-500">{chain.name}</span>
                             </div>
                         ))}
                     </div>

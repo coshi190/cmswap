@@ -1,7 +1,7 @@
 # CMswap
 
-![Live on 5 Chains](https://img.shields.io/badge/Chains-5-blue)
-![6 DEXs Integrated](https://img.shields.io/badge/DEXs-6-green)
+![Live on 6 Chains](https://img.shields.io/badge/Chains-6-blue)
+![7 DEXs Integrated](https://img.shields.io/badge/DEXs-7-green)
 ![Open Source](https://img.shields.io/badge/License-MIT-purple)
 
 **The fastest way to trade tokens across multiple chains.**
@@ -14,13 +14,13 @@ Get the best prices across all DEXs with one click. No registration. No KYC. Jus
 
 ## Why CMswap?
 
-### 🚀 Best Prices Across 6 DEXs
+### 🚀 Best Prices Across 7 DEXs
 
-We aggregate quotes from CMswap, Uniswap, Jibswap, Udonswap, Ponder Finance, and Diamon Finance so you always get the best deal. Our smart routing automatically finds the optimal path for your trade.
+We aggregate quotes from CMswap, Uniswap, PancakeSwap, Jibswap, Udonswap, Ponder Finance, and Diamon Finance so you always get the best deal. Our smart routing automatically finds the optimal path for your trade.
 
-### 🔗 5 Chains, One Interface
+### 🔗 6 Chains, One Interface
 
-Trade seamlessly across KUB Chain, JB Chain, Worldchain, Base, and more - all from a single interface. No more juggling multiple tabs or DEXs.
+Trade seamlessly across KUB Chain, JB Chain, Worldchain, Base, BNB Chain, and more - all from a single interface. No more juggling multiple tabs or DEXs.
 
 ### 🛡️ Non-Custodial & Secure
 
@@ -34,7 +34,7 @@ Built on Next.js 15 with modern Web3 libraries. Get instant quotes and execute t
 
 ## Live Features
 
-✅ **Multi-DEX Swap** - Compare prices across 6 DEXs and auto-select the best rate
+✅ **Multi-DEX Swap** - Compare prices across 7 DEXs and auto-select the best rate
 
 ✅ **Real-Time Quotes** - Instant price updates with transaction simulation before execution
 
@@ -52,9 +52,9 @@ Built on Next.js 15 with modern Web3 libraries. Get instant quotes and execute t
 - 🟢 **KUB Testnet** - CMswap V3
 - 🟢 **Worldchain** - Uniswap V3
 - 🟢 **Base** - Uniswap V3
+- 🟢 **BNB Chain** - PancakeSwap V3
 
 **Coming Soon:**
-- 🟡 BSC integration
 - 🟡 Cross-chain bridging
 - 🟡 Memecoin launchpad
 - 🟡 Earn & staking
@@ -70,7 +70,7 @@ Built on Next.js 15 with modern Web3 libraries. Get instant quotes and execute t
 | **KUB Testnet** | 🟢 Live | CMswap V3 | [testnet.bkcscan.com](https://testnet.bkcscan.com) |
 | **Worldchain** | 🟢 Live | Uniswap V3 | [explorer.alchemy.com](https://worldchain-mainnet.explorer.alchemy.com) |
 | **Base** | 🟢 Live | Uniswap V3 | [basescan.org](https://basescan.org) |
-| **BSC** | 🟡 Coming Soon | - | [bscscan.com](https://bscscan.com) |
+| **BNB Chain** | 🟢 Live | PancakeSwap V3 | [bscscan.com](https://bscscan.com) |
 
 ---
 
@@ -88,9 +88,6 @@ Built on Next.js 15 with modern Web3 libraries. Get instant quotes and execute t
 
 ## What's Next
 
-**Phase 2 (In Progress 🚧)**
-- BSC chain integration
-
 **Phase 3: Earn** - Stake tokens and earn rewards
 
 **Phase 4: Bridge** - Cross-chain token bridging via LayerZero
@@ -98,6 +95,8 @@ Built on Next.js 15 with modern Web3 libraries. Get instant quotes and execute t
 **Phase 5: Launchpad** - Deploy your own memecoin in minutes
 
 **Phase 6: Points** - Rewards and referral system
+
+**Phase 7: Polish** - Performance optimization and testing
 
 [View Full Roadmap →](./roadmap.md)
 
