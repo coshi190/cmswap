@@ -13,7 +13,7 @@ Implementation phases and TODO list for CMswap development.
   - [x] KUB Mainnet integration ✅
   - [ ] Base chain integration
   - [ ] Worldchain integration
-  - [ ] BSX Chain integration
+  - [ ] BSC Chain integration
 - [ ] Phase 3: Earn Feature
 - [ ] Phase 4: Bridge Feature
 - [ ] Phase 5: Launchpad Feature
@@ -118,11 +118,10 @@ Implementation phases and TODO list for CMswap development.
   - [x] Create token list in lib/tokens.ts ✅
   - [x] Add routing configuration (KUB as native token) ✅
   - [x] Update chain icon if needed ✅
-- [ ] Test on KUB mainnet (pending liquidity)
-  - [ ] Quote fetching from DEX protocols
-  - [ ] Swap execution with test amounts
-  - [ ] Multi-hop routing validation
-  - [ ] Gas cost analysis
+- [x] Test on KUB mainnet ✅
+  - [x] Quote fetching from DEX protocols
+  - [x] Swap execution with test amounts
+  - [x] Multi-hop routing validation
 
 #### Base Chain
 
@@ -164,26 +163,26 @@ Implementation phases and TODO list for CMswap development.
   - [ ] Swap execution with test transactions
   - [ ] Full swap flow testing
 
-#### BSX Chain
+#### BSC Chain
 
 **Status**: Not configured, needs full setup
 
-- [ ] BSX chain setup
+- [ ] BSC chain setup
   - [ ] Define custom chain in lib/wagmi.ts
   - [ ] Configure RPC URLs
   - [ ] Add block explorer URL
-  - [ ] Create chain icon (public/chains/bsx.svg)
+  - [ ] Create chain icon (public/chains/BSC.svg)
   - [ ] Update supportedChains array
-- [ ] Research BSX DEX ecosystem
+- [ ] Research BSC DEX ecosystem
   - [ ] Identify available DEX protocols
   - [ ] Document contract addresses (factory, router, etc.)
-  - [ ] Research BSX-specific tokens
-- [ ] Integrate BSX DEX
+  - [ ] Research BSC-specific tokens
+- [ ] Integrate BSC DEX
   - [ ] Full DEX configuration (V2/V3) in dex-config.ts
   - [ ] Token list creation in lib/tokens.ts
   - [ ] Routing configuration in lib/routing-config.ts
   - [ ] Update chainMetadata in lib/wagmi.ts
-- [ ] Test on BSX
+- [ ] Test on BSC
   - [ ] Wallet connection testing
   - [ ] Quote fetching from DEXs
   - [ ] Swap execution with test amounts
@@ -191,7 +190,7 @@ Implementation phases and TODO list for CMswap development.
 
 ### Chain Expansion Notes
 
-- **Priority Order**: KUB Mainnet → Base → Worldchain → BSX (based on user base and DEX maturity)
+- **Priority Order**: KUB Mainnet → Base → Worldchain → BSC (based on user base and DEX maturity)
 - **Dependencies**: Each chain requires DEX contract addresses before integration can begin
 - **Testing**: All chains should be tested with small amounts before mainnet launch
 - **Token Lists**: Prioritize native token, wrapped native, and top 10-20 tokens by volume

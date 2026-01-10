@@ -1,32 +1,122 @@
-# CMswap Documentation
+# CMswap
 
-Welcome to the CMswap documentation. CMswap is a multi-chain Web3 aggregation platform that enables users to swap tokens across DEXs, bridge assets across chains, and launch new memecoins.
+![Live on 6 Chains](https://img.shields.io/badge/Chains-6-blue)
+![5 DEXs Integrated](https://img.shields.io/badge/DEXs-5-green)
+![Open Source](https://img.shields.io/badge/License-MIT-purple)
 
-## Quick Links
+**The fastest way to trade tokens across multiple chains.**
 
-| Document | Description |
-|----------|-------------|
-| [Architecture](./architecture.md) | System architecture and design decisions |
-| [Roadmap](./roadmap.md) | Implementation phases and TODO |
+Get the best prices across all DEXs with one click. No registration. No KYC. Just connect and swap.
 
-## Project Overview
+[Launch Swap →](/swap) · [Documentation →](./architecture.md) · [Discord →](https://discord.gg/k92ReT5EYy)
 
-CMswap is a Web3 aggregation platform with three core features:
+---
 
-1. **Aggregate Swap** - Multi-DEX swap aggregation with real-time price comparison across protocols (CMswap V3, Jibswap V2)
-2. **Cross-Chain Bridge** - Seamless token bridging via LayerZero (coming)
-3. **Memecoin Launchpad** - Token launch platform via Uniswap V4 (coming)
+## Why CMswap?
 
-### Supported Chains
+### 🚀 Best Prices Across 5 DEXs
 
-- BNB Chain (BSC)
-- KUB Chain (Bitkub)
-- KUB Testnet
-- JB Chain (Jibchain)
-- Base
-- Worldchain
+We aggregate quotes from CMswap, Jibswap, Udonswap, Ponder Finance, and Diamon Finance so you always get the best deal. Our smart routing automatically finds the optimal path for your trade.
 
-## Tech Stack Summary
+### 🔗 6 Chains, One Interface
+
+Trade seamlessly across KUB Chain, JB Chain, BSC, Base, Worldchain, and more - all from a single interface. No more juggling multiple tabs or DEXs.
+
+### 🛡️ Non-Custodial & Secure
+
+Your funds never leave your wallet. We're open-source, built with battle-tested smart contracts, and designed with security first. You're always in full control.
+
+### ⚡ Lightning Fast
+
+Built on Next.js 15 with modern Web3 libraries. Get instant quotes and execute transactions in seconds. No more waiting or failed transactions.
+
+---
+
+## Live Features
+
+✅ **Multi-DEX Swap** - Compare prices across 5 DEXs and auto-select the best rate
+
+✅ **Real-Time Quotes** - Instant price updates with transaction simulation before execution
+
+✅ **Multi-Hop Routing** - Find the best path even for indirect token pairs
+
+✅ **Slippage Protection** - Customizable slippage (0.1%, 0.5%, 1%, or custom)
+
+✅ **Native Token Wrap** - Seamless KUB↔WKUB, BNB↔WBNB, JBC↔WJBC conversions
+
+✅ **Shareable Links** - Share your swap configuration with a URL
+
+**Currently Live:**
+- 🟢 **KUB Chain** - CMswap V3, Udonswap, Ponder Finance, Diamon Finance
+- 🟢 **JB Chain** - CMswap V3, Jibswap V2
+- 🟢 **KUB Testnet** - CMswap V3
+
+**Coming Soon:**
+- 🟡 Base, Worldchain, BSC integrations
+- 🟡 Cross-chain bridging
+- 🟡 Memecoin launchpad
+- 🟡 Earn & staking
+
+---
+
+## Supported Chains
+
+| Chain | Status | DEXs | Explorer |
+|-------|--------|------|----------|
+| **KUB Chain** | 🟢 Live | CMswap V3, Udonswap, Ponder, Diamon | [bkcscan.com](https://www.bkcscan.com) |
+| **JB Chain** | 🟢 Live | CMswap V3, Jibswap V2 | [exp-l1.jibchain.net](https://exp-l1.jibchain.net) |
+| **KUB Testnet** | 🟢 Live | CMswap V3 | [testnet.bkcscan.com](https://testnet.bkcscan.com) |
+| **Base** | 🟡 Coming Soon | - | [basescan.org](https://basescan.org) |
+| **Worldchain** | 🟡 Coming Soon | - | [explorer.alchemy.com](https://worldchain-mainnet.explorer.alchemy.com) |
+| **BSC** | 🟡 Coming Soon | - | [bscscan.com](https://bscscan.com) |
+
+---
+
+## Start Swapping in 3 Steps
+
+1. **Connect Wallet** - MetaMask, Trust Wallet, WalletConnect, and more
+
+2. **Select Tokens** - Choose from hundreds of tokens across supported chains
+
+3. **Swap** - Get the best price instantly with one click
+
+[Launch Swap →](/swap)
+
+---
+
+## What's Next
+
+**Phase 2 (In Progress 🚧)**
+- Base, Worldchain, BSC chain integrations
+
+**Phase 3: Earn** - Stake tokens and earn rewards
+
+**Phase 4: Bridge** - Cross-chain token bridging via LayerZero
+
+**Phase 5: Launchpad** - Deploy your own memecoin in minutes
+
+**Phase 6: Points** - Rewards and referral system
+
+[View Full Roadmap →](./roadmap.md)
+
+---
+
+## Community
+
+- 📖 [Documentation](./README.md)
+- 🗺️ [Roadmap](./roadmap.md)
+- 🏗️ [Architecture](./architecture.md)
+- 🐦 [Twitter](https://x.com/cmswap)
+- 💬 [Discord](https://discord.gg/k92ReT5EYy)
+- 💻 [GitHub](https://github.com/coshi190/cmswap)
+
+---
+
+## For Developers
+
+CMswap is built with modern Web3 technologies and follows best practices for scalability and security.
+
+### Tech Stack
 
 | Category | Technology |
 |----------|------------|
@@ -37,7 +127,7 @@ CMswap is a Web3 aggregation platform with three core features:
 | Runtime | Bun |
 | Hosting | Vercel |
 
-## Project Structure
+### Project Structure
 
 ```
 cmswap/
@@ -64,58 +154,53 @@ cmswap/
 └── docs/                  # This documentation
 ```
 
-## Development
+### Development
 
-### Prerequisites
-
+**Prerequisites**
 - Bun 1.x+
 - Node.js 18+
 
-### Environment Variables
+**Environment Variables**
+Not required - The app works out of the box with public RPCs.
 
-**Not required** - The app works out of the box with public RPCs.
+Optional `.env.local` for enhanced features.
 
-Optional `.env.local` for enhanced features:
-
-### Available Scripts
+**Available Scripts**
 
 ```bash
 bun run dev      # Start development server
 bun run build    # Build for production
 bun run start    # Start production server
 bun run lint     # Run ESLint
-bun run clean    # Clean build artifacts (.next, tsconfig.tsbuildinfo)
+bun run clean    # Clean build artifacts
 bun run test     # Run tests (coming)
 ```
 
-## Current Implementation
+### Architecture
 
-### Phase 2: Swap Feature & Multi-Chain Expansion (~60% complete)
+CMswap uses a layered architecture with clear separation of concerns:
 
-**Live:**
-- Multi-DEX swap aggregation (CMswap V3, Jibswap V2)
-- Multi-hop routing for best prices
-- Real-time quotes from all DEXs with price comparison
-- DEX auto-select best price
-- KUB Testnet integration (CMswap V3)
-- JB Chain integration (CMswap V3 + Jibswap V2)
-- KUB Mainnet integration (CMswap V3)
-- Wallet connection with 6 chains
-- Token approval flow
-- Slippage protection (0.1%, 0.5%, 1%, custom)
-- Transaction deadline settings
-- Transaction simulation before execution
-- Wrap/unwrap native tokens
+- **Services Layer** - DEX integrations (Uniswap V2/V3)
+- **Hooks Layer** - React hooks for Web3 interactions
+- **Components Layer** - Reusable UI components
+- **State Layer** - Zustand stores for global state
 
-**In Progress:**
-- Base chain integration
-- Worldchain integration
-- BSX Chain integration
+[Read more →](./architecture.md)
+
+---
 
 ## Contributing
 
 Contributions are welcome! Please read our contributing guidelines before submitting PRs.
 
+**Areas to Contribute:**
+1. UI/UX - Improve the design and user experience
+2. Testing - Write tests for existing features
+3. Documentation - Improve docs and add examples
+4. Smart Contracts - Help audit and improve contracts
+
+---
+
 ## License
 
-MIT
+MIT © 2025 CMswap

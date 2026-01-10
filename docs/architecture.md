@@ -1,7 +1,7 @@
 # CMswap Architecture
 
 > **Version**: 0.2.4
-> **Status**: Multi-DEX Swap Aggregation Live
+> **Status**: Multi-DEX Swap Aggregation Live (5 DEXs, 3 Chains Active)
 
 ---
 
@@ -34,8 +34,10 @@ CMswap is a Web3 application built with Next.js featuring multi-DEX swap aggrega
 └─────────┼───────────────────┼───────────────────┼───────────┘
           │                   │                   │
 ┌─────────────────────────────────────────────────────────────┐
-│              Chains: KUB Testnet, JBC, BSC, KUB, Base, World│
-│              DEXs: CMswap (V3), Jibswap (V2)                │
+│  Chains: KUB Testnet, KUB Mainnet, JBC, BSC, Base, Worldchain│
+│  DEXs: CMswap (V3), Jibswap (V2), UdonSwap (V2), Ponder (V2), Diamon (V2)│
+│  Active: KUB Testnet, KUB Mainnet, JBC                       │
+│  Coming: BSC, Base, Worldchain                               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -119,14 +121,14 @@ components/
 
 ### Supported Chains
 
-| Chain | Chain ID | RPC | Explorer |
-|-------|----------|-----|----------|
-| BNB Chain | 56 | thirdweb.com | bscscan.com |
-| KUB Chain | 96 | bitkubchain.io | bkcscan.com |
-| KUB Testnet | 25925 | bitkubchain.io | scan.kimnet.com |
-| JBC Chain | 8899 | rpc.jibchain.net | exp-l1.jibchain.net |
-| Base | 8453 | base.org | basescan.org |
-| Worldchain | 480 | alchemy.com | alchemy.com |
+| Chain | Chain ID | RPC | Explorer | Status |
+|-------|----------|-----|----------|--------|
+| KUB Testnet | 25925 | rpc-testnet.bitkubchain.io | testnet.bkcscan.com | ✅ Active |
+| KUB Mainnet | 96 | rpc.bitkubchain.io | bkcscan.com | ✅ Active |
+| JBC Chain | 8899 | rpc-l1.jibchain.net | exp-l1.jibchain.net | ✅ Active |
+| BNB Chain | 56 | 56.rpc.thirdweb.com | bscscan.com | 🟡 Configured |
+| Base | 8453 | mainnet.base.org | basescan.org | 🟡 Configured |
+| Worldchain | 480 | worldchain-mainnet.g.alchemy.com/public | worldchain-mainnet.explorer.alchemy.com | 🟡 Configured |
 
 **Config**: `lib/wagmi.ts`
 
@@ -144,20 +146,31 @@ User clicks "Connect Wallet"
 
 ### DEX Configuration
 
-| DEX | Protocol | Chains |
-|-----|----------|--------|
-| CMswap | Uniswap V3 | KUB Testnet, JBC |
-| Jibswap | Uniswap V2 | JBC |
+| DEX | Priority | Protocol | Chains | Status |
+|-----|----------|----------|--------|--------|
+| CMswap | 1 | Uniswap V3 | KUB Testnet, JBC, KUB Mainnet | ✅ Active |
+| Jibswap | 2 | Uniswap V2 | JBC | ✅ Active |
+| UdonSwap | 3 | Uniswap V2 | KUB Mainnet | ✅ Active |
+| Ponder Finance | 4 | Uniswap V2 | KUB Mainnet | ✅ Active |
+| Diamon Finance | 5 | Uniswap V2 | KUB Mainnet | ✅ Active |
 
 **Config**: `lib/dex-config.ts`
 
 **KUB Testnet (CMswap V3)**:
-- Factory/Quoter/Router: `0x31Cc7191Fd07664191E0A53bb5EEC3A0B2B6B6fD`
+- Factory: `0xCBd41F872FD46964bD4Be4d72a8bEBA9D656565b`
+- Quoter: `0x3F64C4Dfd224a102A4d705193a7c40899Cf21fFe`
+- Router: `0x3C5514335dc4E2B0D9e1cc98ddE219c50173c5Be`
 - Fee Tiers: 100, 500, 3000, 10000
 
 **JBC Chain**:
-- CMswap (V3): Same as above
-- Jibswap (V2): Factory `0x6B5D03994C1D5a8B0fD3432C1bB29f93F9263B3b`, Router `0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D`
+- CMswap (V3): Factory `0x5835f123bDF137864263bf204Cf4450aAD1Ba3a7`, Quoter `0x5ad32c64A2aEd381299061F32465A22B1f7A2EE2`, Router `0x2174b3346CCEdBB4Faaff5d8088ff60B74909A9d`
+- Jibswap (V2): Factory `0x4BBdA880C5A0cDcEc6510f0450c6C8bC5773D499`, Router `0x766F8C9321704DC228D43271AF9b7aAB0E529D38`
+
+**KUB Mainnet**:
+- CMswap (V3): Factory `0x090C6E5fF29251B1Ef9EC31605Bdd13351eA316C`, Quoter `0xCB0c6E78519f6B4c1b9623e602E831dEf0f5ff7f`, Router `0x3F7582E36843FF79F173c7DC19f517832496f2D8`
+- UdonSwap (V2): Factory `0x18c7a4CA020A0c648976208dF2e3AE1BAA32e8d1`, Router `0x7aA32A818cD3a6BcdF827f6a411B7adFF56e7A4A`
+- Ponder Finance (V2): Factory `0x20B17e92Dd1866eC6747ACaA38fe1f7075e4B359E`, Router `0xD19C5cebFa9A8919Cc3db2F19163089feBd9604E`
+- Diamon Finance (V2): Factory `0x6E906Dc4749642a456907deCB323A0065dC6F26E`, Router `0xAb30a29168D792c5e6a54E4bcF1Aec926a3b20FA`
 
 ---
 
@@ -189,15 +202,41 @@ User inputs amount
 
 ### Features
 
-- Multi-DEX quotes with price comparison
+- Multi-DEX quotes with price comparison across 5 DEXs
 - Auto-select best DEX (optional)
 - Multi-hop routing for better rates
 - Slippage protection (0.1%, 0.5%, 1%, custom)
 - Transaction deadline settings
 - Wrap/unwrap native tokens
 - Transaction simulation before execution
+- Shareable swap links (URL parameter sync)
+- Batch RPC calls for efficient balance fetching
+- Price comparison UI with percentage difference display
+- Special token handling (e.g., KUSDT non-standard allowance)
+- Multi-protocol support (V2 + V3 simultaneously)
 
 **Execution Hooks**: `hooks/useUniV3SwapExecution.ts`, `hooks/useUniV2SwapExecution.ts`
+
+### Multi-DEX Quote Aggregation
+
+```
+User inputs amount
+  └─> Debounced (500ms)
+  └─> useMultiDexQuotes: Fetch ALL DEXs in parallel
+      ├─> CMswap V3: Direct + Multi-hop routes
+      ├─> Jibswap V2: Direct + Multi-hop routes
+      ├─> UdonSwap V2: Direct + Multi-hop routes
+      ├─> Ponder Finance V2: Direct + Multi-hop routes
+      └─> Diamon Finance V2: Direct + Multi-hop routes
+  └─> Compare outputs, calculate % difference
+  └─> Auto-select best price (if enabled)
+  └─> DexSelectCard: Show all options with comparison
+  └─> User clicks Swap → Execute with selected DEX
+```
+
+**Priority Order**: CMswap (1) → Jibswap (2) → UdonSwap (3) → Ponder Finance (4) → Diamon Finance (5)
+
+**Config**: `lib/dex-config.ts` - Priority-based DEX registry
 
 ---
 
