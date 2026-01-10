@@ -25,7 +25,7 @@ import { getTokensForChain } from '@/lib/tokens'
 import { getDexConfig, isV2Config, getDefaultDexForChain, getSupportedDexs } from '@/lib/dex-config'
 import { TokenSelect } from './token-select'
 import { SettingsDialog } from './settings-dialog'
-import { ArrowDownUp } from 'lucide-react'
+import { ArrowDownUp, ArrowRightLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { isSameToken, getWrapOperation } from '@/services/tokens'
 import { isValidNumberInput } from '@/lib/utils'
@@ -408,7 +408,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                                                     {tokenIn.symbol}
                                                 </>
                                             )}
-                                            <ArrowDownUp className="h-3 w-3 text-muted-foreground" />
+                                            <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
                                         </span>
                                     </div>
                                     <div className="flex justify-between">

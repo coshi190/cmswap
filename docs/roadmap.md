@@ -4,16 +4,10 @@ Implementation phases and TODO list for CMswap development.
 
 ## Project Status
 
-**Current Phase**: Phase 2 - Swap Feature & Multi-Chain Expansion ✅ (100% complete)
+**Current Phase**: Phase 3 - Earn Feature
 
 - [x] Phase 1: Foundation ✅
-- [x] Phase 2: Swap Feature & Multi-Chain Expansion ✅ (100% complete)
-  - [x] KUB Testnet integration ✅
-  - [x] JB Chain integration ✅
-  - [x] KUB Mainnet integration ✅
-  - [x] Base chain integration ✅
-  - [x] Worldchain integration ✅
-  - [x] BSC Chain integration ✅ (PancakeSwap V3)
+- [x] Phase 2: Swap Feature & Multi-Chain Expansion ✅
 - [ ] Phase 3: Earn Feature
 - [ ] Phase 4: Bridge Feature
 - [ ] Phase 5: Launchpad Feature
@@ -79,110 +73,126 @@ Implementation phases and TODO list for CMswap development.
 ## Phase 3: Earn Feature
 
 **Duration**: 2-3 weeks
-**Goal**: Implement staking, liquidity mining, and yield farming
+**Goal**: Implement LP position management and LP mining (stake LP tokens to earn rewards)
 
 ### Features
 
-- [ ] Staking interface
-  - [ ] Single-token staking (stake native tokens)
-  - [ ] LP token staking (stake liquidity positions)
-  - [ ] Flexible vs fixed staking periods
-  - [ ] Real-time APY calculation
-  - [ ] Rewards tracker
+- [ ] LP Position Management
+  - [ ] Add liquidity interface (create LP positions)
+  - [ ] Remove liquidity interface
+  - [ ] Single-sided liquidity provision (if supported by DEX)
+  - [ ] Range selection for concentrated liquidity (V3)
+  - [ ] My LP positions list
+  - [ ] Position details view
+  - [ ] Collect fees button
+  - [ ] Add/remove liquidity to existing position
+  - [ ] Position value and P&L tracking
 
-- [ ] Pool management
-  - [ ] Pool list with APY/TVL display
-  - [ ] Pool creation interface
-  - [ ] Reward distribution setup
-  - [ ] Pool end date configuration
-
-- [ ] Rewards system
+- [ ] LP Mining (Stake LP to Earn)
+  - [ ] Stake LP tokens interface
+  - [ ] Unstake LP tokens interface
+  - [ ] Mining pool list with APY/TVL display
+  - [ ] Real-time rewards calculation
   - [ ] Claim rewards button
-  - [ ] Compound rewards option
-  - [ ] Reward vesting schedule
-  - [ ] Emergency withdraw
-
-- [ ] Position tracking
-  - [ ] My staking positions
-  - [ ] Historical rewards
+  - [ ] Compound rewards option (auto-stake rewards)
+  - [ ] My staking positions tracker
   - [ ] Unclaimed rewards display
-  - [ ] Position value chart
 
-### Smart Contracts
+- [ ] Pool Discovery
+  - [ ] Pool list with APY/TVL/Volume display
+  - [ ] Pool search and filtering
+  - [ ] Token pair lookup
 
-**Foundry Contracts:**
-
-```solidity
-// contracts/src/
-├── StakingPool.sol           # Base staking pool
-├── LiquidityMining.sol       # LP token staking
-├── RewardDistributor.sol     # Reward distribution
-└── interfaces/
-    └── IStaking.sol          # Staking interface
-```
+- [ ] Fee & Reward Collection
+  - [ ] Claim collected trading fees
+  - [ ] Claim mining rewards
+  - [ ] Fee history
+  - [ ] Reward history
 
 ### Files to Create
 
 ```
 components/earn/
-├── earn-page.tsx             # Main earn page layout
-├── pool-card.tsx             # Individual pool display card
-├── pool-list.tsx             # List of all pools
-├── stake-dialog.tsx          # Stake/unstake modal
-├── claim-rewards.tsx         # Claim rewards component
-└── position-tracker.tsx      # User's positions
+├── earn-page.tsx              # Main earn page with tabs
+├── positions-tab.tsx          # LP positions management tab
+└── mining-tab.tsx             # LP mining/staking tab
 
-contracts/
-├── src/
-│   ├── StakingPool.sol
-│   ├── LiquidityMining.sol
-│   └── RewardDistributor.sol
-├── script/
-│   └── DeployStaking.s.sol
-└── test/
-    └── StakingTest.t.sol
+components/positions/
+├── pools.tsx                  # Pool list + pool card (co-located)
+├── add-liquidity-dialog.tsx   # Add liquidity modal
+├── remove-liquidity-dialog.tsx # Remove liquidity modal
+├── positions-list.tsx         # User's LP positions
+├── position-details-modal.tsx # Position details modal
+└── collect-fees-dialog.tsx    # Collect trading fees modal
+
+components/mining/
+├── mining-pools.tsx           # Mining pool list + card (co-located)
+├── stake-dialog.tsx           # Unified stake/unstake modal
+├── claim-dialog.tsx           # Claim rewards modal
+└── staking-positions.tsx      # User's staking positions
 
 services/
-└── staking.ts                # Staking service layer
+├── liquidity/
+│   ├── add-liquidity.ts       # Add liquidity operations
+│   ├── remove-liquidity.ts    # Remove liquidity operations
+│   ├── position-value.ts      # Position calculations
+│   └── fee-collection.ts      # Fee operations
+└── mining/
+    ├── stake.ts               # Staking operations
+    ├── unstake.ts             # Unstaking operations
+    ├── rewards.ts             # Reward calculations
+    └── pools.ts               # Mining pool data
 
 hooks/
-├── useStake.ts               # Staking logic
-├── useUnstake.ts             # Unstaking logic
-├── useClaimRewards.ts        # Claim rewards
-├── usePools.ts               # Pool data fetching
-└── useUserPositions.ts       # User position data
+├── useLiquidity.ts            # Add/remove liquidity
+├── useMining.ts               # Stake/unstake/claim
+├── usePools.ts                # Pool data fetching
+├── useUserPositions.ts        # User LP position data
+├── useUserStakingPositions.ts # User staking positions
+└── usePositionValue.ts        # Position value calculation
 
 types/
-└── earn.ts                   # Earn feature types
+└── earn.ts                    # Consolidated earn types
 
 store/
-└── earn-store.ts             # Earn state management
+└── earn-store.ts              # Earn settings (Zustand + persist)
+
+lib/
+└── liquidity-helpers.ts       # Shared utilities
 
 app/
 └── earn/
-    └── page.tsx              # Earn page
-```
-
-### API Integration
-
-**Staking Calculations:**
-```typescript
-// APY Calculation
-apy = (rewardsPerYear / totalStaked) * 100
-
-// Reward Calculation
-pendingRewards = userShares * rewardsPerShare - userRewardDebt
+    └── page.tsx               # Earn page
 ```
 
 ### TODO
 
-- [ ] Create Foundry staking contracts
-- [ ] Build pool-card component
-- [ ] Build stake-dialog component
+**LP Management:**
+- [ ] Build pools component (list + card co-located)
+- [ ] Build add-liquidity-dialog component
+- [ ] Build remove-liquidity-dialog component
+- [ ] Build positions-list component
+- [ ] Build position-details-modal component
+- [ ] Build collect-fees-dialog component
+- [ ] Integrate with DEX protocols (Uniswap V3, CMswap V3, PancakeSwap V3, etc.)
+- [ ] Implement position value and P&L calculation
+
+**LP Mining:**
+- [ ] Create Foundry LiquidityMiningPool contract
+- [ ] Create RewardDistributor contract
+- [ ] Build mining-pools component (list + card co-located)
+- [ ] Build unified stake-dialog component (stake/unstake modes)
+- [ ] Build claim-dialog component
+- [ ] Build staking-positions component
 - [ ] Implement APY calculation
 - [ ] Integrate TanStack Query for pool data
 - [ ] Add transaction tracking
+- [ ] Create earn-store for persisted settings
+- [ ] Create liquidity-helpers utility functions
+
+**Testing:**
 - [ ] Test on KUB testnet
+- [ ] Test on each supported chain
 - [ ] Security audit (before mainnet)
 
 ---
@@ -488,16 +498,10 @@ POST /api/quests/complete      # Complete quest
 
 ## Phase 8: Advanced Features (Post-MVP)
 
-### Additional Chains
-
-- [ ] Hyperliquid integration (future)
-- [ ] Solana integration (future)
-
 ### Advanced Swap Features
 
 - [ ] Limit orders (1inch Limit Order API)
 - [ ] DCA (Dollar Cost Averaging)
-- [ ] Multi-hop swaps
 - [ ] Portfolio view
 - [ ] Transaction history
 
@@ -549,7 +553,7 @@ POST /api/quests/complete      # Complete quest
 | Phase | Duration | Start Date | Target Date |
 |-------|----------|------------|-------------|
 | Phase 1 | ✅ Complete | - | ✅ Complete |
-| Phase 2 | 1-2 weeks | TBD | TBD |
+| Phase 2 | ✅ Complete | - | ✅ Complete |
 | Phase 3 | 2-3 weeks | TBD | TBD | 🆕 Earn
 | Phase 4 | 1-2 weeks | TBD | TBD |
 | Phase 5 | 2 weeks | TBD | TBD |
