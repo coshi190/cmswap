@@ -76,25 +76,6 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         token: tokenOut,
         address,
     })
-    const tokenBalance0 = useTokenBalance({ token: tokens[0] ?? null, address })
-    const tokenBalance1 = useTokenBalance({ token: tokens[1] ?? null, address })
-    const tokenBalance2 = useTokenBalance({ token: tokens[2] ?? null, address })
-    const tokenBalance3 = useTokenBalance({ token: tokens[3] ?? null, address })
-    const allTokenBalances = useMemo(() => {
-        const balances: Record<string, string> = {}
-        const rawBalances: Record<string, bigint> = {}
-        let isLoading = false
-        const balanceResults = [tokenBalance0, tokenBalance1, tokenBalance2, tokenBalance3]
-        tokens.forEach((token, index) => {
-            const balanceResult = balanceResults[index]
-            if (balanceResult) {
-                balances[token.address] = balanceResult.formattedBalance
-                rawBalances[token.address] = balanceResult.balance
-                if (balanceResult.isLoading) isLoading = true
-            }
-        })
-        return { balances, rawBalances, isLoading }
-    }, [tokens, tokenBalance0, tokenBalance1, tokenBalance2, tokenBalance3])
     const debouncedAmountIn = useDebounce(amountIn, 500)
     const amountInBigInt = useMemo(() => {
         if (!debouncedAmountIn || !tokenIn) return 0n
@@ -328,14 +309,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                                 }
                             }}
                         />
-                        <TokenSelect
-                            token={tokenIn}
-                            tokens={tokens}
-                            onSelect={setTokenIn}
-                            balances={allTokenBalances.balances}
-                            rawBalances={allTokenBalances.rawBalances}
-                            isLoadingBalances={allTokenBalances.isLoading}
-                        />
+                        <TokenSelect token={tokenIn} tokens={tokens} onSelect={setTokenIn} />
                     </div>
                 </div>
                 <div className="flex justify-center">
@@ -371,14 +345,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                             autoComplete="off"
                             value={displayAmountOut}
                         />
-                        <TokenSelect
-                            token={tokenOut}
-                            tokens={tokens}
-                            onSelect={setTokenOut}
-                            balances={allTokenBalances.balances}
-                            rawBalances={allTokenBalances.rawBalances}
-                            isLoadingBalances={allTokenBalances.isLoading}
-                        />
+                        <TokenSelect token={tokenOut} tokens={tokens} onSelect={setTokenOut} />
                     </div>
                 </div>
                 {bestQuote && tokenIn && tokenOut && !isQuoteLoading && (

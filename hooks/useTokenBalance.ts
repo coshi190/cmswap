@@ -1,6 +1,6 @@
 'use client'
 
-import { useBalance, useReadContract } from 'wagmi'
+import { useBalance, useReadContract, useReadContracts, useAccount } from 'wagmi'
 import type { Address } from 'viem'
 import type { Token } from '@/types/tokens'
 import { formatTokenAmount } from '@/services/tokens'
@@ -49,5 +49,70 @@ export function useTokenBalance({ token, address }: UseTokenBalanceParams): UseT
         isLoading: nativeBalance.isLoading || erc20Balance.isLoading,
         isError: nativeBalance.isError || erc20Balance.isError,
         refetch: isNative ? nativeBalance.refetch : erc20Balance.refetch,
+    }
+}
+
+export interface UseTokenBalancesParams {
+    tokens: Token[]
+    limit?: number
+}
+
+export interface UseTokenBalancesResult {
+    balances: Record<string, string>
+    rawBalances: Record<string, bigint>
+    isLoading: boolean
+}
+
+export function useTokenBalances({
+    tokens,
+    limit = 10,
+}: UseTokenBalancesParams): UseTokenBalancesResult {
+    const { address } = useAccount()
+    const tokensToFetch = tokens.slice(0, limit)
+    const nativeToken = tokensToFetch.find((t) => isNativeToken(t.address))
+    const erc20Tokens = tokensToFetch.filter((t) => !isNativeToken(t.address))
+    const nativeBalance = useBalance({
+        address,
+        chainId: nativeToken?.chainId,
+        query: {
+            enabled: !!nativeToken && !!address,
+        },
+    })
+    const erc20Balances = useReadContracts({
+        contracts: erc20Tokens.map((token) => ({
+            address: token.address as Address,
+            abi: ERC20_ABI,
+            functionName: 'balanceOf',
+            args: [address as Address],
+            chainId: token.chainId,
+        })),
+        query: {
+            enabled: erc20Tokens.length > 0 && !!address,
+        },
+    })
+    const balances: Record<string, string> = {}
+    const rawBalances: Record<string, bigint> = {}
+    if (nativeToken && nativeBalance.data?.value !== undefined) {
+        rawBalances[nativeToken.address] = nativeBalance.data.value
+        balances[nativeToken.address] = formatTokenAmount(
+            nativeBalance.data.value,
+            nativeToken.decimals
+        )
+    }
+    erc20Tokens.forEach((token, index) => {
+        const result = erc20Balances.data?.[index]
+        const balance = result?.result as bigint | undefined
+        if (balance !== undefined && typeof balance === 'bigint') {
+            rawBalances[token.address] = balance
+            balances[token.address] = formatTokenAmount(balance, token.decimals)
+        }
+    })
+    const isLoading =
+        (nativeToken ? nativeBalance.isLoading : false) ||
+        (erc20Tokens.length > 0 ? erc20Balances.isLoading : false)
+    return {
+        balances,
+        rawBalances,
+        isLoading,
     }
 }

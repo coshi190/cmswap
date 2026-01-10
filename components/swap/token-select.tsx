@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Token } from '@/types/tokens'
+import { useTokenBalances } from '@/hooks/useTokenBalance'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -28,19 +29,17 @@ interface TokenListProps {
     tokens: Token[]
     selectedToken?: Token | null
     onSelect: (token: Token) => void
-    balances?: Record<string, string>
-    rawBalances?: Record<string, bigint>
-    isLoadingBalances?: boolean
 }
 
-function TokenList({
-    tokens,
-    selectedToken,
-    onSelect,
-    balances: _balances,
-    rawBalances,
-    isLoadingBalances,
-}: TokenListProps) {
+function TokenList({ tokens, selectedToken, onSelect }: TokenListProps) {
+    const {
+        balances: _balances,
+        rawBalances,
+        isLoading: isLoadingBalances,
+    } = useTokenBalances({
+        tokens,
+        limit: 10,
+    })
     const [searchQuery, setSearchQuery] = useState('')
     const handleCopyAddress = (e: React.MouseEvent, address: string) => {
         e.stopPropagation()
@@ -135,19 +134,9 @@ export interface TokenSelectProps {
     token: Token | null
     tokens: Token[]
     onSelect: (token: Token) => void
-    balances?: Record<string, string>
-    rawBalances?: Record<string, bigint>
-    isLoadingBalances?: boolean
 }
 
-export function TokenSelect({
-    token,
-    tokens,
-    onSelect,
-    balances,
-    rawBalances,
-    isLoadingBalances,
-}: TokenSelectProps) {
+export function TokenSelect({ token, tokens, onSelect }: TokenSelectProps) {
     const [open, setOpen] = useState(false)
     const handleSelect = (selectedToken: Token) => {
         onSelect(selectedToken)
@@ -182,14 +171,7 @@ export function TokenSelect({
                 <DialogHeader>
                     <DialogTitle>Select a token</DialogTitle>
                 </DialogHeader>
-                <TokenList
-                    tokens={tokens}
-                    selectedToken={token}
-                    onSelect={handleSelect}
-                    balances={balances}
-                    rawBalances={rawBalances}
-                    isLoadingBalances={isLoadingBalances}
-                />
+                <TokenList tokens={tokens} selectedToken={token} onSelect={handleSelect} />
             </DialogContent>
         </Dialog>
     )
