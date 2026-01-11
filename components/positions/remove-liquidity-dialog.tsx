@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useAccount } from 'wagmi'
+import { useState, useEffect, useRef } from 'react'
+import { useAccount, useChainId } from 'wagmi'
 import {
     Dialog,
     DialogContent,
@@ -10,28 +10,40 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { useEarnStore, useSelectedPosition } from '@/store/earn-store'
+import { useEarnStore } from '@/store/earn-store'
 import { useRemoveLiquidity } from '@/hooks/useLiquidity'
+import { useUserPositions, usePositionDetails } from '@/hooks/useUserPositions'
 import { formatTokenAmount } from '@/services/tokens'
-import { toastSuccess, toastError } from '@/lib/toast'
+import { toastError } from '@/lib/toast'
+import { toast } from 'sonner'
+import { getChainMetadata } from '@/lib/wagmi'
 
 const PERCENTAGE_OPTIONS = [25, 50, 75, 100]
 
 export function RemoveLiquidityDialog() {
     const { address } = useAccount()
-    const { isRemoveLiquidityOpen, closeRemoveLiquidity } = useEarnStore()
-    const selectedPosition = useSelectedPosition()
+    const chainId = useChainId()
+    const {
+        isRemoveLiquidityOpen,
+        closeRemoveLiquidity,
+        selectedPosition: storePosition,
+    } = useEarnStore()
     const [percentage, setPercentage] = useState(100)
+    const { refetch: refetchPositions } = useUserPositions(address, undefined)
+    const { position: selectedPosition } = usePositionDetails(storePosition?.tokenId, undefined)
+    const handledHashRef = useRef<string | null>(null)
     const {
         remove,
         liquidityToRemove,
         amount0Min,
         amount1Min,
+        isSimulating,
         isPreparing,
         isExecuting,
         isConfirming,
         isSuccess,
         error,
+        simulationError,
         hash,
     } = useRemoveLiquidity(
         selectedPosition,
@@ -41,19 +53,42 @@ export function RemoveLiquidityDialog() {
         20 // 20 min deadline
     )
     useEffect(() => {
-        if (isSuccess && hash) {
-            toastSuccess('Liquidity removed successfully!')
+        if (isSuccess && hash && hash !== handledHashRef.current) {
+            handledHashRef.current = hash
+            const meta = getChainMetadata(chainId)
+            const explorerUrl = meta?.explorer
+                ? `${meta.explorer}/tx/${hash}`
+                : `https://etherscan.io/tx/${hash}`
+            toast.success('Liquidity removed successfully!', {
+                action: {
+                    label: 'View Transaction',
+                    onClick: () => window.open(explorerUrl, '_blank', 'noopener,noreferrer'),
+                },
+            })
+            refetchPositions()
             closeRemoveLiquidity()
             setPercentage(100)
         }
-    }, [isSuccess, hash, closeRemoveLiquidity])
+    }, [isSuccess, hash, chainId, closeRemoveLiquidity, refetchPositions])
     useEffect(() => {
         if (error) {
             toastError(error)
         }
     }, [error])
+    useEffect(() => {
+        if (simulationError) {
+            toastError(`Simulation failed: ${simulationError.message}`)
+        }
+    }, [simulationError])
     if (!selectedPosition) return null
-    const isLoading = isPreparing || isExecuting || isConfirming
+    const isLoading = isSimulating || isPreparing || isExecuting || isConfirming
+    const handleRemove = () => {
+        try {
+            remove()
+        } catch (err) {
+            toastError(err instanceof Error ? err.message : 'Failed to remove liquidity')
+        }
+    }
     const getButtonText = () => {
         if (isPreparing) return 'Preparing...'
         if (isExecuting) return 'Confirm in wallet...'
@@ -150,7 +185,7 @@ export function RemoveLiquidityDialog() {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button onClick={remove} disabled={isLoading || liquidityToRemove === 0n}>
+                    <Button onClick={handleRemove} disabled={isLoading || liquidityToRemove === 0n}>
                         {getButtonText()}
                     </Button>
                 </DialogFooter>

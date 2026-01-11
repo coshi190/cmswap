@@ -8,7 +8,12 @@ import {
     useChainId,
 } from 'wagmi'
 import type { Address, Hex } from 'viem'
-import type { AddLiquidityParams, IncreaseLiquidityParams, PositionWithTokens } from '@/types/earn'
+import type {
+    AddLiquidityParams,
+    IncreaseLiquidityParams,
+    PositionWithTokens,
+    PositionDetails,
+} from '@/types/earn'
 import { getV3Config } from '@/lib/dex-config'
 import { NONFUNGIBLE_POSITION_MANAGER_ABI } from '@/lib/abis/nonfungible-position-manager'
 import {
@@ -211,7 +216,7 @@ export function useIncreaseLiquidity(
 }
 
 export function useRemoveLiquidity(
-    position: PositionWithTokens | null,
+    position: PositionDetails | null,
     percentage: number, // 0-100
     recipient: Address | undefined,
     slippageBps: number = 50,
@@ -228,9 +233,8 @@ export function useRemoveLiquidity(
         const liquidityToRemove = (position.liquidity * BigInt(percentage)) / 100n
         const sqrtPriceAX96 = tickToSqrtPriceX96(position.tickLower)
         const sqrtPriceBX96 = tickToSqrtPriceX96(position.tickUpper)
-        const sqrtPriceMidX96 = (sqrtPriceAX96 + sqrtPriceBX96) / 2n
         const { amount0, amount1 } = getAmountsForLiquidity(
-            sqrtPriceMidX96,
+            position.sqrtPriceX96,
             sqrtPriceAX96,
             sqrtPriceBX96,
             liquidityToRemove
@@ -285,7 +289,12 @@ export function useRemoveLiquidity(
         hash,
     })
     const remove = () => {
-        if (!simulationData?.request) return
+        if (!simulationData?.request) {
+            const errorMsg = simulationError
+                ? `Transaction simulation failed: ${simulationError.message}`
+                : 'Transaction is not ready. Please wait...'
+            throw new Error(errorMsg)
+        }
         writeContract(simulationData.request)
     }
     return {
@@ -294,6 +303,7 @@ export function useRemoveLiquidity(
         amount0Min,
         amount1Min,
         isPreparing: isSimulating,
+        isSimulating,
         isExecuting,
         isConfirming,
         isSuccess,

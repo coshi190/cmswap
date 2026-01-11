@@ -65,7 +65,11 @@ export function useUserPositions(
         },
     })
     const positionCount = Number(balance ?? 0n)
-    const { data: tokenIds, isLoading: isLoadingTokenIds } = useReadContracts({
+    const {
+        data: tokenIds,
+        isLoading: isLoadingTokenIds,
+        refetch: refetchTokenIds,
+    } = useReadContracts({
         contracts: Array.from({ length: positionCount }, (_, i) => ({
             address: positionManager as Address,
             abi: NONFUNGIBLE_POSITION_MANAGER_ABI,
@@ -84,7 +88,11 @@ export function useUserPositions(
             .map((r) => r.result as bigint | undefined)
             .filter((id): id is bigint => id !== undefined)
     }, [tokenIds])
-    const { data: positionData, isLoading: isLoadingPositions } = useReadContracts({
+    const {
+        data: positionData,
+        isLoading: isLoadingPositions,
+        refetch: refetchPositionsData,
+    } = useReadContracts({
         contracts: validTokenIds.map((tokenId) => ({
             address: positionManager as Address,
             abi: NONFUNGIBLE_POSITION_MANAGER_ABI,
@@ -160,7 +168,11 @@ export function useUserPositions(
             return { token0: token0 as Address, token1: token1 as Address, fee: parseInt(fee!) }
         })
     }, [rawPositions])
-    const { data: poolAddresses, isLoading: isLoadingPoolAddresses } = useReadContracts({
+    const {
+        data: poolAddresses,
+        isLoading: isLoadingPoolAddresses,
+        refetch: refetchPoolAddresses,
+    } = useReadContracts({
         contracts: uniquePoolKeys.map(({ token0, token1, fee }) => ({
             address: dexConfig?.factory as Address,
             abi: UNISWAP_V3_FACTORY_ABI,
@@ -179,7 +191,11 @@ export function useUserPositions(
             .map((r) => r.result as Address | undefined)
             .filter((a): a is Address => !!a && a !== '0x0000000000000000000000000000000000000000')
     }, [poolAddresses])
-    const { data: poolStates, isLoading: isLoadingPoolStates } = useReadContracts({
+    const {
+        data: poolStates,
+        isLoading: isLoadingPoolStates,
+        refetch: refetchPoolStates,
+    } = useReadContracts({
         contracts: poolAddressList.map((poolAddress) => ({
             address: poolAddress,
             abi: UNISWAP_V3_POOL_ABI,
@@ -253,6 +269,10 @@ export function useUserPositions(
     }, [rawPositions, effectiveChainId, poolStateMap, poolAddresses, uniquePoolKeys])
     const refetch = () => {
         refetchBalance()
+        refetchTokenIds()
+        refetchPositionsData()
+        refetchPoolAddresses()
+        refetchPoolStates()
     }
     return {
         positions,
