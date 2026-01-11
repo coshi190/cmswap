@@ -75,6 +75,30 @@ export const NONFUNGIBLE_POSITION_MANAGER_ABI = [
         ],
         outputs: [{ name: 'approved', type: 'bool' }],
     },
+    // ERC721 transfer functions
+    {
+        type: 'function',
+        name: 'safeTransferFrom',
+        stateMutability: 'nonpayable',
+        inputs: [
+            { name: 'from', type: 'address' },
+            { name: 'to', type: 'address' },
+            { name: 'tokenId', type: 'uint256' },
+        ],
+        outputs: [],
+    },
+    {
+        type: 'function',
+        name: 'safeTransferFrom',
+        stateMutability: 'nonpayable',
+        inputs: [
+            { name: 'from', type: 'address' },
+            { name: 'to', type: 'address' },
+            { name: 'tokenId', type: 'uint256' },
+            { name: 'data', type: 'bytes' },
+        ],
+        outputs: [],
+    },
     // Position data
     {
         type: 'function',

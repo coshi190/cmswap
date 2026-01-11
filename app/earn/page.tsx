@@ -12,6 +12,13 @@ import { RemoveLiquidityDialog } from '@/components/positions/remove-liquidity-d
 import { CollectFeesDialog } from '@/components/positions/collect-fees-dialog'
 import { PositionDetailsModal } from '@/components/positions/position-details-modal'
 import { IncreaseLiquidityDialog } from '@/components/positions/increase-liquidity-dialog'
+import {
+    MiningPools,
+    StakedPositions,
+    StakeDialog,
+    UnstakeDialog,
+    ClaimRewardsDialog,
+} from '@/components/mining'
 import { useEarnStore, useActiveTab } from '@/store/earn-store'
 import { getV3Config } from '@/lib/dex-config'
 import { ConnectButton } from '@/components/web3/connect-button'
@@ -63,11 +70,12 @@ function EarnContent() {
                 </div>
                 <Tabs
                     value={activeTab}
-                    onValueChange={(v) => setActiveTab(v as 'pools' | 'positions')}
+                    onValueChange={(v) => setActiveTab(v as 'pools' | 'positions' | 'mining')}
                 >
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="pools">Pools</TabsTrigger>
                         <TabsTrigger value="positions">My Positions</TabsTrigger>
+                        <TabsTrigger value="mining">Mining</TabsTrigger>
                     </TabsList>
                     <TabsContent value="positions" className="mt-4">
                         <PositionsList />
@@ -75,12 +83,21 @@ function EarnContent() {
                     <TabsContent value="pools" className="mt-4">
                         <PoolsList />
                     </TabsContent>
+                    <TabsContent value="mining" className="mt-4 space-y-8">
+                        <MiningPools />
+                        <StakedPositions />
+                    </TabsContent>
                 </Tabs>
+                {/* Liquidity Dialogs */}
                 <AddLiquidityDialog />
                 <RemoveLiquidityDialog />
                 <CollectFeesDialog />
                 <PositionDetailsModal />
                 <IncreaseLiquidityDialog />
+                {/* Mining Dialogs */}
+                <StakeDialog />
+                <UnstakeDialog />
+                <ClaimRewardsDialog />
             </div>
         </div>
     )

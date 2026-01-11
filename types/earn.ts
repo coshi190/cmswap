@@ -306,3 +306,97 @@ export const DEFAULT_RANGE_CONFIG: RangeConfig = {
     priceLower: '0',
     priceUpper: '0',
 }
+
+// ============ Staking/Mining Types ============
+
+/**
+ * IncentiveKey structure matching V3 Staker contract
+ */
+export interface IncentiveKey {
+    rewardToken: Address
+    pool: Address
+    startTime: number
+    endTime: number
+    refundee: Address
+}
+
+/**
+ * Incentive data with computed fields
+ */
+export interface Incentive extends IncentiveKey {
+    incentiveId: `0x${string}` // keccak256 hash of IncentiveKey
+    totalRewardUnclaimed: bigint
+    totalSecondsClaimedX128: bigint
+    numberOfStakes: number
+    // Enriched token info
+    rewardTokenInfo: Token
+    poolToken0: Token
+    poolToken1: Token
+    poolFee: number
+    // Status
+    isActive: boolean
+    isEnded: boolean
+}
+
+/**
+ * User's staked position in an incentive
+ */
+export interface StakedPosition {
+    tokenId: bigint
+    incentiveId: `0x${string}`
+    liquidity: bigint
+    secondsPerLiquidityInsideInitialX128: bigint
+    // Enriched data
+    position: PositionWithTokens
+    incentive: Incentive
+    pendingRewards: bigint
+}
+
+/**
+ * Deposit info from V3 Staker contract
+ */
+export interface DepositInfo {
+    owner: Address
+    numberOfStakes: number
+    tickLower: number
+    tickUpper: number
+}
+
+/**
+ * Parameters for staking a position
+ */
+export interface StakeParams {
+    tokenId: bigint
+    incentiveKey: IncentiveKey
+}
+
+/**
+ * Parameters for unstaking a position
+ */
+export interface UnstakeParams {
+    tokenId: bigint
+    incentiveKey: IncentiveKey
+}
+
+/**
+ * Parameters for claiming rewards
+ */
+export interface ClaimRewardParams {
+    rewardToken: Address
+    to: Address
+    amountRequested: bigint // Use 0n for max claim
+}
+
+/**
+ * Mining settings (persisted)
+ */
+export interface MiningSettings {
+    hideEndedIncentives: boolean
+}
+
+/**
+ * Default mining settings
+ */
+export const DEFAULT_MINING_SETTINGS: MiningSettings = {
+    hideEndedIncentives: true,
+}

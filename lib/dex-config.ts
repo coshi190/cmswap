@@ -42,6 +42,7 @@ export interface V3Config extends BaseProtocolConfig {
     quoter: Address
     swapRouter: Address
     positionManager?: Address
+    staker?: Address // V3 Staker contract for LP mining
     feeTiers?: number[]
     defaultFeeTier?: number
 }
@@ -123,6 +124,7 @@ export const DEX_CONFIGS_REGISTRY: Record<DEXType, DEXConfiguration> = {
                     quoter: '0x3F64C4Dfd224a102A4d705193a7c40899Cf21fFe' as Address,
                     swapRouter: '0x3C5514335dc4E2B0D9e1cc98ddE219c50173c5Be' as Address,
                     positionManager: '0x690f45C21744eCC4ac0D897ACAC920889c3cFa4b' as Address,
+                    staker: '0xe445e132E9D4d0863E0BE079faf716A97250f37E' as Address,
                     feeTiers: [FEE_TIERS.STABLE, FEE_TIERS.LOW, FEE_TIERS.MEDIUM, FEE_TIERS.HIGH],
                     defaultFeeTier: FEE_TIERS.MEDIUM,
                 },
@@ -136,6 +138,7 @@ export const DEX_CONFIGS_REGISTRY: Record<DEXType, DEXConfiguration> = {
                     quoter: '0x5ad32c64A2aEd381299061F32465A22B1f7A2EE2' as Address,
                     swapRouter: '0x2174b3346CCEdBB4Faaff5d8088ff60B74909A9d' as Address,
                     positionManager: '0xfC445018B20522F9cEd1350201e179555a7573A1' as Address,
+                    staker: '0xC7Aa8C815937B61F70E04d814914683bB9Bd7579' as Address,
                     feeTiers: [FEE_TIERS.STABLE, FEE_TIERS.LOW, FEE_TIERS.MEDIUM, FEE_TIERS.HIGH],
                     defaultFeeTier: FEE_TIERS.MEDIUM,
                 },
@@ -149,6 +152,7 @@ export const DEX_CONFIGS_REGISTRY: Record<DEXType, DEXConfiguration> = {
                     quoter: '0xCB0c6E78519f6B4c1b9623e602E831dEf0f5ff7f' as Address,
                     swapRouter: '0x3F7582E36843FF79F173c7DC19f517832496f2D8' as Address,
                     positionManager: '0xb6b76870549893c6b59E7e979F254d0F9Cca4Cc9' as Address,
+                    staker: '0xC216ad61623617Aa01b757A06836AA8D6fb547fF' as Address,
                     feeTiers: [FEE_TIERS.STABLE, FEE_TIERS.LOW, FEE_TIERS.MEDIUM, FEE_TIERS.HIGH],
                     defaultFeeTier: FEE_TIERS.MEDIUM,
                 },
@@ -295,6 +299,14 @@ export function getV3Config(chainId: number, dexId?: DEXType): V3Config | undefi
 
     const config = chainProtocols[ProtocolType.V3]
     return config?.protocolType === ProtocolType.V3 && config.enabled ? config : undefined
+}
+
+/**
+ * Get V3 Staker contract address for LP mining
+ */
+export function getV3StakerAddress(chainId: number, dexId?: DEXType): Address | undefined {
+    const config = getV3Config(chainId, dexId)
+    return config?.staker
 }
 
 /**

@@ -1,0 +1,145 @@
+import type { IncentiveKey } from '@/types/earn'
+
+/**
+ * Check if an incentive is currently active (started but not ended)
+ */
+export function isIncentiveActive(key: IncentiveKey): boolean {
+    const now = Math.floor(Date.now() / 1000)
+    return now >= key.startTime && now < key.endTime
+}
+
+/**
+ * Check if an incentive has ended
+ */
+export function isIncentiveEnded(key: IncentiveKey): boolean {
+    const now = Math.floor(Date.now() / 1000)
+    return now >= key.endTime
+}
+
+/**
+ * Check if an incentive has not started yet
+ */
+export function isIncentivePending(key: IncentiveKey): boolean {
+    const now = Math.floor(Date.now() / 1000)
+    return now < key.startTime
+}
+
+/**
+ * Get the remaining time for an active incentive
+ */
+export function getTimeRemaining(endTime: number): {
+    days: number
+    hours: number
+    minutes: number
+    seconds: number
+    isEnded: boolean
+    totalSeconds: number
+} {
+    const now = Math.floor(Date.now() / 1000)
+    const remaining = endTime - now
+
+    if (remaining <= 0) {
+        return {
+            days: 0,
+            hours: 0,
+            minutes: 0,
+            seconds: 0,
+            isEnded: true,
+            totalSeconds: 0,
+        }
+    }
+
+    return {
+        days: Math.floor(remaining / 86400),
+        hours: Math.floor((remaining % 86400) / 3600),
+        minutes: Math.floor((remaining % 3600) / 60),
+        seconds: remaining % 60,
+        isEnded: false,
+        totalSeconds: remaining,
+    }
+}
+
+/**
+ * Get time until incentive starts
+ */
+export function getTimeUntilStart(startTime: number): {
+    days: number
+    hours: number
+    minutes: number
+    seconds: number
+    hasStarted: boolean
+    totalSeconds: number
+} {
+    const now = Math.floor(Date.now() / 1000)
+    const remaining = startTime - now
+
+    if (remaining <= 0) {
+        return {
+            days: 0,
+            hours: 0,
+            minutes: 0,
+            seconds: 0,
+            hasStarted: true,
+            totalSeconds: 0,
+        }
+    }
+
+    return {
+        days: Math.floor(remaining / 86400),
+        hours: Math.floor((remaining % 86400) / 3600),
+        minutes: Math.floor((remaining % 3600) / 60),
+        seconds: remaining % 60,
+        hasStarted: false,
+        totalSeconds: remaining,
+    }
+}
+
+/**
+ * Format incentive duration for display
+ */
+export function formatIncentiveDuration(startTime: number, endTime: number): string {
+    const durationSeconds = endTime - startTime
+    const days = Math.floor(durationSeconds / 86400)
+    const hours = Math.floor((durationSeconds % 86400) / 3600)
+
+    if (days > 0) {
+        return hours > 0 ? `${days}d ${hours}h` : `${days} days`
+    }
+    return `${hours} hours`
+}
+
+/**
+ * Format time remaining for display
+ */
+export function formatTimeRemaining(endTime: number): string {
+    const { days, hours, minutes, isEnded } = getTimeRemaining(endTime)
+
+    if (isEnded) return 'Ended'
+    if (days > 0) return `${days}d ${hours}h remaining`
+    if (hours > 0) return `${hours}h ${minutes}m remaining`
+    return `${minutes}m remaining`
+}
+
+/**
+ * Get incentive status label
+ */
+export function getIncentiveStatus(key: IncentiveKey): 'pending' | 'active' | 'ended' {
+    if (isIncentivePending(key)) return 'pending'
+    if (isIncentiveEnded(key)) return 'ended'
+    return 'active'
+}
+
+/**
+ * Get progress percentage for an active incentive
+ */
+export function getIncentiveProgress(startTime: number, endTime: number): number {
+    const now = Math.floor(Date.now() / 1000)
+
+    if (now < startTime) return 0
+    if (now >= endTime) return 100
+
+    const totalDuration = endTime - startTime
+    const elapsed = now - startTime
+
+    return Math.round((elapsed / totalDuration) * 100)
+}

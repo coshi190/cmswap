@@ -1,0 +1,198 @@
+'use client'
+
+import { useEffect, useState, useMemo } from 'react'
+import { useAccount, useChainId } from 'wagmi'
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
+import { useEarnStore, useSelectedIncentive } from '@/store/earn-store'
+import { useUserPositions } from '@/hooks/useUserPositions'
+import { useDepositInfo } from '@/hooks/useStakedPositions'
+import { useStakePosition } from '@/hooks/useStaking'
+import { formatTokenAmount } from '@/services/tokens'
+import { formatTimeRemaining } from '@/services/mining/incentives'
+import { toastSuccess, toastError } from '@/lib/toast'
+import type { PositionWithTokens } from '@/types/earn'
+
+export function StakeDialog() {
+    const { address } = useAccount()
+    const chainId = useChainId()
+    const { isStakeDialogOpen, closeStakeDialog } = useEarnStore()
+    const selectedIncentive = useSelectedIncentive()
+    const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null)
+    const { positions, isLoading: isLoadingPositions } = useUserPositions(address, chainId)
+    const eligiblePositions = useMemo(() => {
+        if (!selectedIncentive) return []
+        return positions.filter(
+            (p) => p.poolAddress.toLowerCase() === selectedIncentive.pool.toLowerCase()
+        )
+    }, [positions, selectedIncentive])
+    const selectedPosition = useMemo(() => {
+        if (!selectedPositionId) return null
+        return eligiblePositions.find((p) => p.tokenId.toString() === selectedPositionId) ?? null
+    }, [eligiblePositions, selectedPositionId])
+    const { isDeposited } = useDepositInfo(selectedPosition?.tokenId)
+    const {
+        stake,
+        approveAndStake,
+        needsApproval,
+        isPreparing,
+        isExecuting,
+        isConfirming,
+        isSuccess,
+        error,
+        hash,
+    } = useStakePosition(selectedPosition, selectedIncentive, address)
+    useEffect(() => {
+        if (isStakeDialogOpen) {
+            setSelectedPositionId(null)
+        }
+    }, [isStakeDialogOpen])
+    useEffect(() => {
+        if (isSuccess && hash) {
+            toastSuccess('Position staked successfully!')
+            closeStakeDialog()
+        }
+    }, [isSuccess, hash, closeStakeDialog])
+    useEffect(() => {
+        if (error) {
+            toastError(error)
+        }
+    }, [error])
+    if (!selectedIncentive) return null
+    const isLoading = isPreparing || isExecuting || isConfirming
+    const canStake = selectedPosition && !isLoading && !isDeposited
+    const getButtonText = () => {
+        if (!selectedPosition) return 'Select a position'
+        if (isDeposited) return 'Position already staked'
+        if (isPreparing) return 'Preparing...'
+        if (isExecuting) return 'Confirm in wallet...'
+        if (isConfirming) return 'Staking...'
+        if (needsApproval) return 'Approve & Stake'
+        return 'Stake Position'
+    }
+    const handleStake = () => {
+        if (needsApproval) {
+            approveAndStake()
+        } else {
+            stake()
+        }
+    }
+    return (
+        <Dialog open={isStakeDialogOpen} onOpenChange={closeStakeDialog}>
+            <DialogContent className="max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>Stake LP Position</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6">
+                    <div className="bg-muted rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium">
+                                {selectedIncentive.poolToken0.symbol} /{' '}
+                                {selectedIncentive.poolToken1.symbol}
+                            </span>
+                            <Badge
+                                variant="outline"
+                                className="bg-green-500/10 text-green-500 border-green-500/20"
+                            >
+                                {selectedIncentive.isActive ? 'Active' : 'Inactive'}
+                            </Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                            Reward: {selectedIncentive.rewardTokenInfo.symbol} &middot;{' '}
+                            {formatTimeRemaining(selectedIncentive.endTime)}
+                        </div>
+                    </div>
+                    <div className="space-y-3">
+                        <Label>Select Position to Stake</Label>
+                        {isLoadingPositions ? (
+                            <div className="text-center text-muted-foreground py-4">
+                                Loading positions...
+                            </div>
+                        ) : eligiblePositions.length === 0 ? (
+                            <div className="text-center text-muted-foreground py-4 border rounded-lg">
+                                <div>No eligible positions found.</div>
+                                <div className="text-sm mt-1">
+                                    Create an LP position for this pool first.
+                                </div>
+                            </div>
+                        ) : (
+                            <RadioGroup
+                                value={selectedPositionId ?? ''}
+                                onValueChange={setSelectedPositionId}
+                            >
+                                <div className="space-y-2">
+                                    {eligiblePositions.map((position) => (
+                                        <PositionOption
+                                            key={position.tokenId.toString()}
+                                            position={position}
+                                            isSelected={
+                                                selectedPositionId === position.tokenId.toString()
+                                            }
+                                        />
+                                    ))}
+                                </div>
+                            </RadioGroup>
+                        )}
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={closeStakeDialog}>
+                        Cancel
+                    </Button>
+                    <Button onClick={handleStake} disabled={!canStake}>
+                        {getButtonText()}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+interface PositionOptionProps {
+    position: PositionWithTokens
+    isSelected: boolean
+}
+
+function PositionOption({ position, isSelected }: PositionOptionProps) {
+    return (
+        <label
+            className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                isSelected ? 'border-primary bg-primary/5' : 'hover:border-primary/50'
+            }`}
+        >
+            <RadioGroupItem value={position.tokenId.toString()} />
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                    <span className="font-medium">Position #{position.tokenId.toString()}</span>
+                    {position.inRange ? (
+                        <Badge
+                            variant="outline"
+                            className="bg-green-500/10 text-green-500 border-green-500/20"
+                        >
+                            In Range
+                        </Badge>
+                    ) : (
+                        <Badge variant="outline" className="text-muted-foreground">
+                            Out of Range
+                        </Badge>
+                    )}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                    {formatTokenAmount(position.amount0, position.token0Info.decimals)}{' '}
+                    {position.token0Info.symbol} +{' '}
+                    {formatTokenAmount(position.amount1, position.token1Info.decimals)}{' '}
+                    {position.token1Info.symbol}
+                </div>
+            </div>
+        </label>
+    )
+}

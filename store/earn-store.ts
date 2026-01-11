@@ -7,8 +7,11 @@ import type {
     RangeConfig,
     RangePreset,
     EarnSettings,
+    Incentive,
+    StakedPosition,
+    MiningSettings,
 } from '@/types/earn'
-import { DEFAULT_EARN_SETTINGS, DEFAULT_RANGE_CONFIG } from '@/types/earn'
+import { DEFAULT_EARN_SETTINGS, DEFAULT_RANGE_CONFIG, DEFAULT_MINING_SETTINGS } from '@/types/earn'
 import { getPresetRange, tickToPrice } from '@/lib/liquidity-helpers'
 
 interface EarnStore {
@@ -30,11 +33,19 @@ interface EarnStore {
     isPositionDetailsOpen: boolean
     isIncreaseLiquidityOpen: boolean
 
+    // Mining state
+    selectedIncentive: Incentive | null
+    selectedStakedPosition: StakedPosition | null
+    isStakeDialogOpen: boolean
+    isUnstakeDialogOpen: boolean
+    isClaimDialogOpen: boolean
+
     // Settings (persisted)
     settings: EarnSettings
+    miningSettings: MiningSettings
 
     // Active tab
-    activeTab: 'pools' | 'positions'
+    activeTab: 'pools' | 'positions' | 'mining'
 
     // Actions
     setSelectedPool: (pool: V3PoolData | null) => void
@@ -44,7 +55,7 @@ interface EarnStore {
     setToken0: (token: Token | null) => void
     setToken1: (token: Token | null) => void
     setFee: (fee: number) => void
-    setActiveTab: (tab: 'pools' | 'positions') => void
+    setActiveTab: (tab: 'pools' | 'positions' | 'mining') => void
 
     // Modal controls
     openAddLiquidity: (pool?: V3PoolData) => void
@@ -58,11 +69,20 @@ interface EarnStore {
     openIncreaseLiquidity: (position: PositionWithTokens) => void
     closeIncreaseLiquidity: () => void
 
+    // Mining modal controls
+    openStakeDialog: (incentive: Incentive) => void
+    closeStakeDialog: () => void
+    openUnstakeDialog: (stakedPosition: StakedPosition) => void
+    closeUnstakeDialog: () => void
+    openClaimDialog: () => void
+    closeClaimDialog: () => void
+
     // Settings
     setDefaultSlippage: (slippage: number) => void
     setDefaultDeadline: (minutes: number) => void
     setHideClosedPositions: (hide: boolean) => void
     setShowAllPools: (show: boolean) => void
+    setHideEndedIncentives: (hide: boolean) => void
 
     // Reset
     reset: () => void
@@ -81,6 +101,12 @@ const initialState = {
     isCollectFeesOpen: false,
     isPositionDetailsOpen: false,
     isIncreaseLiquidityOpen: false,
+    // Mining state
+    selectedIncentive: null,
+    selectedStakedPosition: null,
+    isStakeDialogOpen: false,
+    isUnstakeDialogOpen: false,
+    isClaimDialogOpen: false,
     activeTab: 'pools' as const,
 }
 
@@ -90,6 +116,7 @@ export const useEarnStore = create<EarnStore>()(
             (set, get) => ({
                 ...initialState,
                 settings: DEFAULT_EARN_SETTINGS,
+                miningSettings: DEFAULT_MINING_SETTINGS,
 
                 // Pool selection
                 setSelectedPool: (pool) => set({ selectedPool: pool }),
@@ -235,6 +262,41 @@ export const useEarnStore = create<EarnStore>()(
                         selectedPosition: null,
                     }),
 
+                // Modal controls - Mining
+                openStakeDialog: (incentive) =>
+                    set({
+                        isStakeDialogOpen: true,
+                        selectedIncentive: incentive,
+                    }),
+
+                closeStakeDialog: () =>
+                    set({
+                        isStakeDialogOpen: false,
+                        selectedIncentive: null,
+                    }),
+
+                openUnstakeDialog: (stakedPosition) =>
+                    set({
+                        isUnstakeDialogOpen: true,
+                        selectedStakedPosition: stakedPosition,
+                    }),
+
+                closeUnstakeDialog: () =>
+                    set({
+                        isUnstakeDialogOpen: false,
+                        selectedStakedPosition: null,
+                    }),
+
+                openClaimDialog: () =>
+                    set({
+                        isClaimDialogOpen: true,
+                    }),
+
+                closeClaimDialog: () =>
+                    set({
+                        isClaimDialogOpen: false,
+                    }),
+
                 // Settings
                 setDefaultSlippage: (slippage) =>
                     set((state) => ({
@@ -256,6 +318,11 @@ export const useEarnStore = create<EarnStore>()(
                         settings: { ...state.settings, showAllPools: show },
                     })),
 
+                setHideEndedIncentives: (hide) =>
+                    set((state) => ({
+                        miningSettings: { ...state.miningSettings, hideEndedIncentives: hide },
+                    })),
+
                 // Reset
                 reset: () => set({ ...initialState }),
 
@@ -269,12 +336,19 @@ export const useEarnStore = create<EarnStore>()(
             }),
             {
                 name: 'cmswap-earn-store',
-                partialize: (state) => ({ settings: state.settings }),
+                partialize: (state) => ({
+                    settings: state.settings,
+                    miningSettings: state.miningSettings,
+                }),
                 merge: (persisted, current) => ({
                     ...current,
                     settings: {
                         ...DEFAULT_EARN_SETTINGS,
                         ...(persisted as { settings?: EarnSettings })?.settings,
+                    },
+                    miningSettings: {
+                        ...DEFAULT_MINING_SETTINGS,
+                        ...(persisted as { miningSettings?: MiningSettings })?.miningSettings,
                     },
                 }),
             }
@@ -285,7 +359,10 @@ export const useEarnStore = create<EarnStore>()(
 
 // Selectors
 export const useEarnSettings = () => useEarnStore((state) => state.settings)
+export const useMiningSettings = () => useEarnStore((state) => state.miningSettings)
 export const useSelectedPool = () => useEarnStore((state) => state.selectedPool)
 export const useSelectedPosition = () => useEarnStore((state) => state.selectedPosition)
+export const useSelectedIncentive = () => useEarnStore((state) => state.selectedIncentive)
+export const useSelectedStakedPosition = () => useEarnStore((state) => state.selectedStakedPosition)
 export const useRangeConfig = () => useEarnStore((state) => state.rangeConfig)
 export const useActiveTab = () => useEarnStore((state) => state.activeTab)
