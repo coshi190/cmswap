@@ -1,0 +1,238 @@
+'use client'
+
+import { useState, useMemo, useEffect } from 'react'
+import { useAccount, useChainId } from 'wagmi'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { RangeSelector } from './range-selector'
+import { TokenSelect } from '@/components/swap/token-select'
+import { useEarnStore, useRangeConfig } from '@/store/earn-store'
+import { usePool } from '@/hooks/usePools'
+import { useAddLiquidity } from '@/hooks/useLiquidity'
+import { useTokenApproval } from '@/hooks/useTokenApproval'
+import { useTokenBalance } from '@/hooks/useTokenBalance'
+import { getV3Config, FEE_TIERS } from '@/lib/dex-config'
+import { parseTokenAmount, formatBalance } from '@/services/tokens'
+import { TOKEN_LISTS } from '@/lib/tokens'
+import type { AddLiquidityParams } from '@/types/earn'
+import { toastSuccess, toastError } from '@/lib/toast'
+
+const FEE_OPTIONS = [
+    { value: FEE_TIERS.STABLE, label: '0.01%', description: 'Best for stable pairs' },
+    { value: FEE_TIERS.LOW, label: '0.05%', description: 'Best for stable pairs' },
+    { value: FEE_TIERS.MEDIUM, label: '0.3%', description: 'Best for most pairs' },
+    { value: FEE_TIERS.HIGH, label: '1%', description: 'Best for exotic pairs' },
+]
+
+export function AddLiquidityDialog() {
+    const { address } = useAccount()
+    const chainId = useChainId()
+    const dexConfig = getV3Config(chainId)
+
+    const {
+        isAddLiquidityOpen,
+        closeAddLiquidity,
+        token0,
+        token1,
+        fee,
+        setToken0,
+        setToken1,
+        setFee,
+        setRangeConfig,
+    } = useEarnStore()
+    const rangeConfig = useRangeConfig()
+    const [amount0, setAmount0] = useState('')
+    const [amount1, setAmount1] = useState('')
+    const { pool, isLoading: isLoadingPool } = usePool(token0, token1, fee, chainId)
+    const { balance: balance0 } = useTokenBalance({ token: token0, address })
+    const { balance: balance1 } = useTokenBalance({ token: token1, address })
+    const mintParams = useMemo<AddLiquidityParams | null>(() => {
+        if (!token0 || !token1 || !address || !pool) return null
+        if (!amount0 && !amount1) return null
+        if (rangeConfig.tickLower >= rangeConfig.tickUpper) return null
+        const amount0Parsed = amount0 ? parseTokenAmount(amount0, token0.decimals) : 0n
+        const amount1Parsed = amount1 ? parseTokenAmount(amount1, token1.decimals) : 0n
+        return {
+            token0,
+            token1,
+            fee,
+            tickLower: rangeConfig.tickLower,
+            tickUpper: rangeConfig.tickUpper,
+            amount0Desired: amount0Parsed,
+            amount1Desired: amount1Parsed,
+            slippageTolerance: 50, // 0.5%
+            deadline: Math.floor(Date.now() / 1000) + 20 * 60,
+            recipient: address,
+        }
+    }, [token0, token1, amount0, amount1, fee, rangeConfig, address, pool])
+    const {
+        needsApproval: needsApproval0,
+        approve: approve0,
+        isApproving: isApproving0,
+    } = useTokenApproval({
+        token: token0,
+        owner: dexConfig?.positionManager,
+        amountToApprove: amount0 ? parseTokenAmount(amount0, token0?.decimals ?? 18) : 0n,
+    })
+    const {
+        needsApproval: needsApproval1,
+        approve: approve1,
+        isApproving: isApproving1,
+    } = useTokenApproval({
+        token: token1,
+        owner: dexConfig?.positionManager,
+        amountToApprove: amount1 ? parseTokenAmount(amount1, token1?.decimals ?? 18) : 0n,
+    })
+    const { mint, isPreparing, isExecuting, isConfirming, isSuccess, error, hash } =
+        useAddLiquidity(mintParams)
+    useEffect(() => {
+        if (pool && rangeConfig.tickLower === 0 && rangeConfig.tickUpper === 0) {
+            setRangeConfig({
+                ...rangeConfig,
+                tickLower: pool.tick - 1000,
+                tickUpper: pool.tick + 1000,
+            })
+        }
+    }, [pool, rangeConfig, setRangeConfig])
+    useEffect(() => {
+        if (isSuccess && hash) {
+            toastSuccess('Position created successfully!')
+            closeAddLiquidity()
+            setAmount0('')
+            setAmount1('')
+        }
+    }, [isSuccess, hash, closeAddLiquidity])
+    useEffect(() => {
+        if (error) {
+            toastError(error)
+        }
+    }, [error])
+    const isLoading = isPreparing || isExecuting || isConfirming || isApproving0 || isApproving1
+    const handleSubmit = () => {
+        if (needsApproval0) {
+            approve0()
+        } else if (needsApproval1) {
+            approve1()
+        } else {
+            mint()
+        }
+    }
+    const getButtonText = () => {
+        if (isApproving0) return `Approving ${token0?.symbol}...`
+        if (isApproving1) return `Approving ${token1?.symbol}...`
+        if (needsApproval0) return `Approve ${token0?.symbol}`
+        if (needsApproval1) return `Approve ${token1?.symbol}`
+        if (isPreparing) return 'Preparing...'
+        if (isExecuting) return 'Confirm in wallet...'
+        if (isConfirming) return 'Creating position...'
+        return 'Add Liquidity'
+    }
+    const isButtonDisabled = () => {
+        if (isLoading) return true
+        if (!token0 || !token1) return true
+        if (!amount0 && !amount1) return true
+        if (rangeConfig.tickLower >= rangeConfig.tickUpper) return true
+        if (!pool) return true
+        return false
+    }
+    return (
+        <Dialog open={isAddLiquidityOpen} onOpenChange={closeAddLiquidity}>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>Add Liquidity</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6">
+                    <div className="grid grid-cols-2">
+                        <TokenSelect
+                            token={token0}
+                            tokens={TOKEN_LISTS[chainId] ?? []}
+                            onSelect={setToken0}
+                        />
+                        <TokenSelect
+                            token={token1}
+                            tokens={TOKEN_LISTS[chainId] ?? []}
+                            onSelect={setToken1}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Fee Tier</Label>
+                        <div className="grid grid-cols-4 gap-2">
+                            {FEE_OPTIONS.map((option) => (
+                                <Button
+                                    key={option.value}
+                                    type="button"
+                                    size="sm"
+                                    variant={fee === option.value ? 'default' : 'outline'}
+                                    onClick={() => setFee(option.value)}
+                                    className="flex flex-col h-auto py-2"
+                                >
+                                    <span>{option.label}</span>
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                    {pool && token0 && token1 && (
+                        <RangeSelector
+                            currentTick={pool.tick}
+                            tickSpacing={pool.tickSpacing}
+                            decimals0={token0.decimals}
+                            decimals1={token1.decimals}
+                            token0Symbol={token0.symbol}
+                            token1Symbol={token1.symbol}
+                            config={rangeConfig}
+                            onChange={setRangeConfig}
+                        />
+                    )}
+                    {token0 && token1 && (
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <div className="flex justify-between">
+                                    <Label>{token0.symbol}</Label>
+                                    <span className="text-sm text-muted-foreground">
+                                        Balance:{' '}
+                                        {balance0 ? formatBalance(balance0, token0.decimals) : '0'}
+                                    </span>
+                                </div>
+                                <Input
+                                    type="number"
+                                    step="any"
+                                    value={amount0}
+                                    onChange={(e) => setAmount0(e.target.value)}
+                                    placeholder="0.0"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex justify-between">
+                                    <Label>{token1.symbol}</Label>
+                                    <span className="text-sm text-muted-foreground">
+                                        Balance:{' '}
+                                        {balance1 ? formatBalance(balance1, token1.decimals) : '0'}
+                                    </span>
+                                </div>
+                                <Input
+                                    type="number"
+                                    step="any"
+                                    value={amount1}
+                                    onChange={(e) => setAmount1(e.target.value)}
+                                    placeholder="0.0"
+                                />
+                            </div>
+                        </div>
+                    )}
+                    {token0 && token1 && !pool && !isLoadingPool && (
+                        <div className="text-center text-muted-foreground text-sm">
+                            No pool exists for this pair and fee tier. Your position will create the
+                            pool.
+                        </div>
+                    )}
+                    <Button className="w-full" onClick={handleSubmit} disabled={isButtonDisabled()}>
+                        {getButtonText()}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
+}

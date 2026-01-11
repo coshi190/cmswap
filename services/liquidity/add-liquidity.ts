@@ -1,0 +1,221 @@
+import { encodeFunctionData, type Address, type Hex } from 'viem'
+import type {
+    AddLiquidityParams,
+    IncreaseLiquidityParams,
+    MintCallParams,
+    IncreaseLiquidityCallParams,
+} from '@/types/earn'
+import { NONFUNGIBLE_POSITION_MANAGER_ABI } from '@/lib/abis/nonfungible-position-manager'
+import {
+    calculateMinAmounts,
+    calculateDeadline,
+    sortTokens,
+    nearestUsableTick,
+    getTickSpacing,
+} from '@/lib/liquidity-helpers'
+import { isNativeToken } from '@/lib/wagmi'
+import { getWrappedNativeAddress } from '@/services/tokens'
+
+/**
+ * Build mint parameters for creating a new liquidity position
+ */
+export function buildMintParams(params: AddLiquidityParams): MintCallParams {
+    // Sort tokens - V3 requires token0 < token1
+    const [token0, token1] = sortTokens(params.token0, params.token1)
+    const isToken0First = token0.address === params.token0.address
+
+    // Get amounts in correct order
+    const amount0Desired = isToken0First ? params.amount0Desired : params.amount1Desired
+    const amount1Desired = isToken0First ? params.amount1Desired : params.amount0Desired
+
+    // Calculate minimum amounts with slippage
+    const { amount0Min, amount1Min } = calculateMinAmounts(
+        amount0Desired,
+        amount1Desired,
+        params.slippageTolerance
+    )
+
+    // Ensure ticks are properly aligned
+    const tickSpacing = getTickSpacing(params.fee)
+    const tickLower = nearestUsableTick(params.tickLower, tickSpacing)
+    const tickUpper = nearestUsableTick(params.tickUpper, tickSpacing)
+
+    return {
+        token0: token0.address,
+        token1: token1.address,
+        fee: params.fee,
+        tickLower,
+        tickUpper,
+        amount0Desired,
+        amount1Desired,
+        amount0Min,
+        amount1Min,
+        recipient: params.recipient,
+        deadline: BigInt(params.deadline),
+    }
+}
+
+/**
+ * Build increase liquidity parameters for an existing position
+ */
+export function buildIncreaseLiquidityParams(
+    params: IncreaseLiquidityParams
+): IncreaseLiquidityCallParams {
+    const { amount0Min, amount1Min } = calculateMinAmounts(
+        params.amount0Desired,
+        params.amount1Desired,
+        params.slippageTolerance
+    )
+
+    return {
+        tokenId: params.tokenId,
+        amount0Desired: params.amount0Desired,
+        amount1Desired: params.amount1Desired,
+        amount0Min,
+        amount1Min,
+        deadline: calculateDeadline(params.deadline),
+    }
+}
+
+/**
+ * Encode mint function call
+ */
+export function encodeMint(params: MintCallParams): Hex {
+    return encodeFunctionData({
+        abi: NONFUNGIBLE_POSITION_MANAGER_ABI,
+        functionName: 'mint',
+        args: [params],
+    })
+}
+
+/**
+ * Encode increaseLiquidity function call
+ */
+export function encodeIncreaseLiquidity(params: IncreaseLiquidityCallParams): Hex {
+    return encodeFunctionData({
+        abi: NONFUNGIBLE_POSITION_MANAGER_ABI,
+        functionName: 'increaseLiquidity',
+        args: [params],
+    })
+}
+
+/**
+ * Encode refundETH function call
+ */
+export function encodeRefundETH(): Hex {
+    return encodeFunctionData({
+        abi: NONFUNGIBLE_POSITION_MANAGER_ABI,
+        functionName: 'refundETH',
+        args: [],
+    })
+}
+
+/**
+ * Build multicall data for minting with native token
+ * When adding liquidity with native token (ETH/KUB), we need to:
+ * 1. Call mint with wrapped native address
+ * 2. Call refundETH to return excess native token
+ */
+export function buildMintWithNativeMulticall(
+    params: AddLiquidityParams,
+    chainId: number
+): { data: Hex[]; value: bigint } {
+    const token0IsNative = isNativeToken(params.token0.address)
+    const token1IsNative = isNativeToken(params.token1.address)
+
+    if (!token0IsNative && !token1IsNative) {
+        // No native token, single mint call
+        const mintParams = buildMintParams(params)
+        return {
+            data: [encodeMint(mintParams)],
+            value: 0n,
+        }
+    }
+
+    // Replace native token with wrapped version
+    const wrappedNative = getWrappedNativeAddress(chainId)
+    const modifiedParams = { ...params }
+
+    let nativeAmount = 0n
+    if (token0IsNative) {
+        modifiedParams.token0 = { ...params.token0, address: wrappedNative }
+        nativeAmount = params.amount0Desired
+    }
+    if (token1IsNative) {
+        modifiedParams.token1 = { ...params.token1, address: wrappedNative }
+        nativeAmount = params.amount1Desired
+    }
+
+    const mintParams = buildMintParams(modifiedParams)
+
+    return {
+        data: [encodeMint(mintParams), encodeRefundETH()],
+        value: nativeAmount,
+    }
+}
+
+/**
+ * Build multicall data for increasing liquidity with native token
+ */
+export function buildIncreaseLiquidityWithNativeMulticall(
+    params: IncreaseLiquidityParams,
+    hasNativeToken: boolean,
+    nativeAmount: bigint
+): { data: Hex[]; value: bigint } {
+    const increaseParams = buildIncreaseLiquidityParams(params)
+
+    if (!hasNativeToken) {
+        return {
+            data: [encodeIncreaseLiquidity(increaseParams)],
+            value: 0n,
+        }
+    }
+
+    return {
+        data: [encodeIncreaseLiquidity(increaseParams), encodeRefundETH()],
+        value: nativeAmount,
+    }
+}
+
+/**
+ * Validate tick range
+ */
+export function validateTickRange(
+    tickLower: number,
+    tickUpper: number,
+    tickSpacing: number
+): { valid: boolean; error?: string } {
+    if (tickLower >= tickUpper) {
+        return { valid: false, error: 'Lower tick must be less than upper tick' }
+    }
+
+    if (tickLower % tickSpacing !== 0) {
+        return { valid: false, error: `Lower tick must be a multiple of ${tickSpacing}` }
+    }
+
+    if (tickUpper % tickSpacing !== 0) {
+        return { valid: false, error: `Upper tick must be a multiple of ${tickSpacing}` }
+    }
+
+    return { valid: true }
+}
+
+/**
+ * Get the token addresses that need approval for adding liquidity
+ * Returns addresses of non-native tokens
+ */
+export function getTokensNeedingApproval(
+    params: AddLiquidityParams
+): { token: Address; amount: bigint }[] {
+    const approvals: { token: Address; amount: bigint }[] = []
+
+    if (!isNativeToken(params.token0.address) && params.amount0Desired > 0n) {
+        approvals.push({ token: params.token0.address, amount: params.amount0Desired })
+    }
+
+    if (!isNativeToken(params.token1.address) && params.amount1Desired > 0n) {
+        approvals.push({ token: params.token1.address, amount: params.amount1Desired })
+    }
+
+    return approvals
+}

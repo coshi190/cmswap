@@ -12,7 +12,7 @@ import { isNativeToken } from '@/lib/wagmi'
 import { getAllowanceFunctionName } from '@/lib/tokens'
 
 export interface UseTokenApprovalParams {
-    token: Token
+    token: Token | null
     owner?: Address
     amountToApprove?: bigint
 }
@@ -35,17 +35,17 @@ export function useTokenApproval({
     amountToApprove,
 }: UseTokenApprovalParams): UseTokenApprovalResult {
     const { selectedDex } = useSwapStore()
-    const dexConfig = getDexConfig(token.chainId, selectedDex)
+    const dexConfig = token ? getDexConfig(token.chainId, selectedDex) : undefined
     const spender = dexConfig ? getProtocolSpender(dexConfig) : undefined
-    const isTokenNative = isNativeToken(token.address)
+    const isTokenNative = token ? isNativeToken(token.address) : false
     const { data: allowance = 0n, refetch: refetchAllowance } = useReadContract({
-        address: token.address as Address,
+        address: token?.address as Address,
         abi: ERC20_ABI,
-        functionName: getAllowanceFunctionName(token.address),
+        functionName: token ? getAllowanceFunctionName(token.address) : 'allowance',
         args: [owner || '0x0', spender || '0x0'],
-        chainId: token.chainId,
+        chainId: token?.chainId,
         query: {
-            enabled: !!owner && !!spender && !isTokenNative,
+            enabled: !!token && !!owner && !!spender && !isTokenNative,
         },
     })
     const {
@@ -64,7 +64,9 @@ export function useTokenApproval({
         }
     }, [isSuccess, refetchAllowance])
     const needsToApprove =
-        !isTokenNative && amountToApprove ? needsApproval(allowance, amountToApprove) : false
+        token && !isTokenNative && amountToApprove
+            ? needsApproval(allowance, amountToApprove)
+            : false
     return {
         allowance,
         needsApproval: needsToApprove,
@@ -75,7 +77,7 @@ export function useTokenApproval({
         error,
         hash,
         approve: () => {
-            if (!spender || !owner || isTokenNative) return
+            if (!token || !spender || !owner || isTokenNative) return
             approve({
                 ...buildInfiniteApprovalParams(token.address as Address, spender),
                 chainId: token.chainId,
