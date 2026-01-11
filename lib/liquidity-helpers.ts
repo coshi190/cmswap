@@ -339,6 +339,70 @@ function getAmount1ForLiquidity(
     return (liquidity * (sqrtPriceBX96 - sqrtPriceAX96)) / Q96
 }
 
+/**
+ * Calculate the required amount1 given a desired amount0 for a position
+ * Returns the amount1 needed to match the amount0 at the current price and range
+ */
+export function calculateAmount1FromAmount0(
+    sqrtPriceX96: bigint,
+    sqrtPriceLowerX96: bigint,
+    sqrtPriceUpperX96: bigint,
+    amount0: bigint
+): bigint {
+    if (amount0 === 0n) return 0n
+
+    // Ensure lower < upper
+    if (sqrtPriceLowerX96 > sqrtPriceUpperX96) {
+        ;[sqrtPriceLowerX96, sqrtPriceUpperX96] = [sqrtPriceUpperX96, sqrtPriceLowerX96]
+    }
+
+    if (sqrtPriceX96 <= sqrtPriceLowerX96) {
+        // Price below range: only token0 is needed, no token1 required
+        return 0n
+    } else if (sqrtPriceX96 >= sqrtPriceUpperX96) {
+        // Price above range: only token1 is needed, token0 won't be used
+        // This is an edge case - if user enters amount0 but price is above range,
+        // we can't meaningfully calculate amount1 (position would be all token1)
+        return 0n
+    } else {
+        // Price in range: calculate liquidity from amount0, then get amount1
+        const liquidity = getLiquidityForAmount0(sqrtPriceX96, sqrtPriceUpperX96, amount0)
+        return getAmount1ForLiquidity(sqrtPriceLowerX96, sqrtPriceX96, liquidity)
+    }
+}
+
+/**
+ * Calculate the required amount0 given a desired amount1 for a position
+ * Returns the amount0 needed to match the amount1 at the current price and range
+ */
+export function calculateAmount0FromAmount1(
+    sqrtPriceX96: bigint,
+    sqrtPriceLowerX96: bigint,
+    sqrtPriceUpperX96: bigint,
+    amount1: bigint
+): bigint {
+    if (amount1 === 0n) return 0n
+
+    // Ensure lower < upper
+    if (sqrtPriceLowerX96 > sqrtPriceUpperX96) {
+        ;[sqrtPriceLowerX96, sqrtPriceUpperX96] = [sqrtPriceUpperX96, sqrtPriceLowerX96]
+    }
+
+    if (sqrtPriceX96 <= sqrtPriceLowerX96) {
+        // Price below range: only token0 is needed, token1 won't be used
+        // This is an edge case - if user enters amount1 but price is below range,
+        // we can't meaningfully calculate amount0 (position would be all token0)
+        return 0n
+    } else if (sqrtPriceX96 >= sqrtPriceUpperX96) {
+        // Price above range: only token1 is needed, no token0 required
+        return 0n
+    } else {
+        // Price in range: calculate liquidity from amount1, then get amount0
+        const liquidity = getLiquidityForAmount1(sqrtPriceLowerX96, sqrtPriceX96, amount1)
+        return getAmount0ForLiquidity(sqrtPriceX96, sqrtPriceUpperX96, liquidity)
+    }
+}
+
 // ============ Range Helpers ============
 
 /**

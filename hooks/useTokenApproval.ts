@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import type { Address } from 'viem'
 import type { Token } from '@/types/tokens'
@@ -14,6 +14,7 @@ import { getAllowanceFunctionName } from '@/lib/tokens'
 export interface UseTokenApprovalParams {
     token: Token | null
     owner?: Address
+    spender?: Address
     amountToApprove?: bigint
 }
 
@@ -32,11 +33,13 @@ export interface UseTokenApprovalResult {
 export function useTokenApproval({
     token,
     owner,
+    spender: spenderOverride,
     amountToApprove,
 }: UseTokenApprovalParams): UseTokenApprovalResult {
     const { selectedDex } = useSwapStore()
     const dexConfig = token ? getDexConfig(token.chainId, selectedDex) : undefined
-    const spender = dexConfig ? getProtocolSpender(dexConfig) : undefined
+    const defaultSpender = dexConfig ? getProtocolSpender(dexConfig) : undefined
+    const spender = spenderOverride || defaultSpender
     const isTokenNative = token ? isNativeToken(token.address) : false
     const { data: allowance = 0n, refetch: refetchAllowance } = useReadContract({
         address: token?.address as Address,
@@ -54,19 +57,51 @@ export function useTokenApproval({
         isPending: isApproving,
         isError,
         error,
+        reset,
     } = useWriteContract()
-    const { isSuccess, isPending: isConfirming } = useWaitForTransactionReceipt({
+    const { isSuccess: receiptSuccess, isPending: receiptPending } = useWaitForTransactionReceipt({
         hash,
+        chainId: token?.chainId,
     })
+    const [approvalDetected, setApprovalDetected] = useState(false)
+    const isSuccess = receiptSuccess || approvalDetected
+    const isConfirming = !!hash && receiptPending && !approvalDetected
     useEffect(() => {
-        if (isSuccess) {
-            refetchAllowance()
+        if (!hash) {
+            setApprovalDetected(false)
         }
-    }, [isSuccess, refetchAllowance])
+    }, [hash])
+    useEffect(() => {
+        if (!isConfirming || !amountToApprove) return
+        const pollInterval = setInterval(() => {
+            refetchAllowance().then((result) => {
+                if (result.data && result.data >= amountToApprove) {
+                    setApprovalDetected(true)
+                    reset()
+                }
+            })
+        }, 2000) // Poll every 2 seconds
+        return () => clearInterval(pollInterval)
+    }, [isConfirming, amountToApprove, refetchAllowance, reset])
+    useEffect(() => {
+        if (receiptSuccess) {
+            refetchAllowance().then(() => {
+                reset()
+            })
+        }
+    }, [receiptSuccess, refetchAllowance, reset])
     const needsToApprove =
         token && !isTokenNative && amountToApprove
             ? needsApproval(allowance, amountToApprove)
             : false
+    const handleApprove = useCallback(() => {
+        if (!token || !spender || !owner || isTokenNative) return
+        setApprovalDetected(false)
+        approve({
+            ...buildInfiniteApprovalParams(token.address as Address, spender),
+            chainId: token.chainId,
+        })
+    }, [token, spender, owner, isTokenNative, approve])
     return {
         allowance,
         needsApproval: needsToApprove,
@@ -76,12 +111,6 @@ export function useTokenApproval({
         isError,
         error,
         hash,
-        approve: () => {
-            if (!token || !spender || !owner || isTokenNative) return
-            approve({
-                ...buildInfiniteApprovalParams(token.address as Address, spender),
-                chainId: token.chainId,
-            })
-        },
+        approve: handleApprove,
     }
 }

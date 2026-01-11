@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useAccount, useChainId } from 'wagmi'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -13,11 +13,19 @@ import { usePool } from '@/hooks/usePools'
 import { useAddLiquidity } from '@/hooks/useLiquidity'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
 import { useTokenBalance } from '@/hooks/useTokenBalance'
+import { useUserPositions } from '@/hooks/useUserPositions'
 import { getV3Config, FEE_TIERS } from '@/lib/dex-config'
-import { parseTokenAmount, formatBalance } from '@/services/tokens'
+import { getChainMetadata } from '@/lib/wagmi'
+import { parseTokenAmount, formatBalance, formatTokenAmount } from '@/services/tokens'
+import {
+    tickToSqrtPriceX96,
+    calculateAmount1FromAmount0,
+    calculateAmount0FromAmount1,
+} from '@/lib/liquidity-helpers'
 import { TOKEN_LISTS } from '@/lib/tokens'
 import type { AddLiquidityParams } from '@/types/earn'
-import { toastSuccess, toastError } from '@/lib/toast'
+import { toastError } from '@/lib/toast'
+import { toast } from 'sonner'
 
 const FEE_OPTIONS = [
     { value: FEE_TIERS.STABLE, label: '0.01%', description: 'Best for stable pairs' },
@@ -29,6 +37,7 @@ const FEE_OPTIONS = [
 export function AddLiquidityDialog() {
     const { address } = useAccount()
     const chainId = useChainId()
+    const { refetch: refetchPositions } = useUserPositions(address, chainId)
     const dexConfig = getV3Config(chainId)
 
     const {
@@ -43,8 +52,10 @@ export function AddLiquidityDialog() {
         setRangeConfig,
     } = useEarnStore()
     const rangeConfig = useRangeConfig()
+    const handledHashRef = useRef<string | null>(null)
     const [amount0, setAmount0] = useState('')
     const [amount1, setAmount1] = useState('')
+    const [activeInput, setActiveInput] = useState<'token0' | 'token1' | null>(null)
     const { pool, isLoading: isLoadingPool } = usePool(token0, token1, fee, chainId)
     const { balance: balance0 } = useTokenBalance({ token: token0, address })
     const { balance: balance1 } = useTokenBalance({ token: token1, address })
@@ -62,7 +73,7 @@ export function AddLiquidityDialog() {
             tickUpper: rangeConfig.tickUpper,
             amount0Desired: amount0Parsed,
             amount1Desired: amount1Parsed,
-            slippageTolerance: 50, // 0.5%
+            slippageTolerance: 100, // 1%
             deadline: Math.floor(Date.now() / 1000) + 20 * 60,
             recipient: address,
         }
@@ -71,22 +82,34 @@ export function AddLiquidityDialog() {
         needsApproval: needsApproval0,
         approve: approve0,
         isApproving: isApproving0,
+        isConfirming: isConfirming0,
     } = useTokenApproval({
         token: token0,
-        owner: dexConfig?.positionManager,
+        owner: address,
+        spender: dexConfig?.positionManager,
         amountToApprove: amount0 ? parseTokenAmount(amount0, token0?.decimals ?? 18) : 0n,
     })
     const {
         needsApproval: needsApproval1,
         approve: approve1,
         isApproving: isApproving1,
+        isConfirming: isConfirming1,
     } = useTokenApproval({
         token: token1,
-        owner: dexConfig?.positionManager,
+        owner: address,
+        spender: dexConfig?.positionManager,
         amountToApprove: amount1 ? parseTokenAmount(amount1, token1?.decimals ?? 18) : 0n,
     })
-    const { mint, isPreparing, isExecuting, isConfirming, isSuccess, error, hash } =
-        useAddLiquidity(mintParams)
+    const {
+        mint,
+        isPreparing,
+        isExecuting,
+        isConfirming,
+        isSuccess,
+        error,
+        simulationError,
+        hash,
+    } = useAddLiquidity(mintParams)
     useEffect(() => {
         if (pool && rangeConfig.tickLower === 0 && rangeConfig.tickUpper === 0) {
             setRangeConfig({
@@ -96,20 +119,107 @@ export function AddLiquidityDialog() {
             })
         }
     }, [pool, rangeConfig, setRangeConfig])
+
+    // Auto-calculate dependent token amount based on active input
     useEffect(() => {
-        if (isSuccess && hash) {
-            toastSuccess('Position created successfully!')
+        if (!pool || !token0 || !token1) return
+        if (rangeConfig.tickLower >= rangeConfig.tickUpper) return
+
+        const sqrtPriceX96 = pool.sqrtPriceX96
+        const sqrtPriceLowerX96 = tickToSqrtPriceX96(rangeConfig.tickLower)
+        const sqrtPriceUpperX96 = tickToSqrtPriceX96(rangeConfig.tickUpper)
+
+        if (activeInput === 'token0') {
+            if (!amount0) {
+                setAmount1('')
+                return
+            }
+            const amount0Parsed = parseTokenAmount(amount0, token0.decimals)
+            if (amount0Parsed > 0n) {
+                const calculatedAmount1 = calculateAmount1FromAmount0(
+                    sqrtPriceX96,
+                    sqrtPriceLowerX96,
+                    sqrtPriceUpperX96,
+                    amount0Parsed
+                )
+                setAmount1(
+                    calculatedAmount1 > 0n
+                        ? formatTokenAmount(calculatedAmount1, token1.decimals)
+                        : ''
+                )
+            } else {
+                setAmount1('')
+            }
+        } else if (activeInput === 'token1') {
+            if (!amount1) {
+                setAmount0('')
+                return
+            }
+            const amount1Parsed = parseTokenAmount(amount1, token1.decimals)
+            if (amount1Parsed > 0n) {
+                const calculatedAmount0 = calculateAmount0FromAmount1(
+                    sqrtPriceX96,
+                    sqrtPriceLowerX96,
+                    sqrtPriceUpperX96,
+                    amount1Parsed
+                )
+                setAmount0(
+                    calculatedAmount0 > 0n
+                        ? formatTokenAmount(calculatedAmount0, token0.decimals)
+                        : ''
+                )
+            } else {
+                setAmount0('')
+            }
+        }
+    }, [
+        activeInput,
+        amount0,
+        amount1,
+        pool,
+        token0,
+        token1,
+        rangeConfig.tickLower,
+        rangeConfig.tickUpper,
+    ])
+    useEffect(() => {
+        if (isSuccess && hash && hash !== handledHashRef.current) {
+            handledHashRef.current = hash
+            const meta = getChainMetadata(chainId)
+            const explorerUrl = meta?.explorer
+                ? `${meta.explorer}/tx/${hash}`
+                : `https://etherscan.io/tx/${hash}`
+            toast.success('Position created successfully!', {
+                action: {
+                    label: 'View Transaction',
+                    onClick: () => window.open(explorerUrl, '_blank', 'noopener,noreferrer'),
+                },
+            })
+            refetchPositions()
             closeAddLiquidity()
             setAmount0('')
             setAmount1('')
+            setActiveInput(null)
         }
-    }, [isSuccess, hash, closeAddLiquidity])
+    }, [isSuccess, hash, chainId, closeAddLiquidity, refetchPositions])
     useEffect(() => {
         if (error) {
             toastError(error)
         }
     }, [error])
-    const isLoading = isPreparing || isExecuting || isConfirming || isApproving0 || isApproving1
+    useEffect(() => {
+        if (simulationError) {
+            toastError(`Simulation failed: ${simulationError.message}`)
+        }
+    }, [simulationError])
+    const isLoading =
+        isPreparing ||
+        isExecuting ||
+        isConfirming ||
+        isApproving0 ||
+        isApproving1 ||
+        isConfirming0 ||
+        isConfirming1
     const handleSubmit = () => {
         if (needsApproval0) {
             approve0()
@@ -121,7 +231,9 @@ export function AddLiquidityDialog() {
     }
     const getButtonText = () => {
         if (isApproving0) return `Approving ${token0?.symbol}...`
+        if (isConfirming0) return `Confirming ${token0?.symbol} approval...`
         if (isApproving1) return `Approving ${token1?.symbol}...`
+        if (isConfirming1) return `Confirming ${token1?.symbol} approval...`
         if (needsApproval0) return `Approve ${token0?.symbol}`
         if (needsApproval1) return `Approve ${token1?.symbol}`
         if (isPreparing) return 'Preparing...'
@@ -199,7 +311,10 @@ export function AddLiquidityDialog() {
                                     type="number"
                                     step="any"
                                     value={amount0}
-                                    onChange={(e) => setAmount0(e.target.value)}
+                                    onChange={(e) => {
+                                        setActiveInput('token0')
+                                        setAmount0(e.target.value)
+                                    }}
                                     placeholder="0.0"
                                 />
                             </div>
@@ -216,7 +331,10 @@ export function AddLiquidityDialog() {
                                     type="number"
                                     step="any"
                                     value={amount1}
-                                    onChange={(e) => setAmount1(e.target.value)}
+                                    onChange={(e) => {
+                                        setActiveInput('token1')
+                                        setAmount1(e.target.value)
+                                    }}
                                     placeholder="0.0"
                                 />
                             </div>

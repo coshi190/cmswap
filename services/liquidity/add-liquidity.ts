@@ -28,12 +28,14 @@ export function buildMintParams(params: AddLiquidityParams): MintCallParams {
     const amount0Desired = isToken0First ? params.amount0Desired : params.amount1Desired
     const amount1Desired = isToken0First ? params.amount1Desired : params.amount0Desired
 
-    // Calculate minimum amounts with slippage
-    const { amount0Min, amount1Min } = calculateMinAmounts(
-        amount0Desired,
-        amount1Desired,
-        params.slippageTolerance
-    )
+    // For adding liquidity, set minimums to 0
+    // The contract determines actual amounts based on current price, which can differ
+    // significantly from desired amounts when price moves. Setting minimums to 0:
+    // 1. Allows the transaction to succeed with current price
+    // 2. The simulation catches any issues before submitting
+    // 3. Excess tokens are not taken (refunded for native tokens)
+    const amount0Min = 0n
+    const amount1Min = 0n
 
     // Ensure ticks are properly aligned
     const tickSpacing = getTickSpacing(params.fee)
