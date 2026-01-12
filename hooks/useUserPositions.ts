@@ -442,3 +442,206 @@ export function usePositionDetails(
         refetch,
     }
 }
+
+export function usePositionsByTokenIds(
+    tokenIds: bigint[],
+    chainId?: number
+): {
+    positions: PositionWithTokens[]
+    isLoading: boolean
+    refetch: () => void
+} {
+    const currentChainId = useChainId()
+    const effectiveChainId = chainId ?? currentChainId
+    const dexConfig = getV3Config(effectiveChainId)
+    const positionManager = dexConfig?.positionManager
+    const {
+        data: positionData,
+        isLoading: isLoadingPositions,
+        refetch: refetchPositions,
+    } = useReadContracts({
+        contracts: tokenIds.map((tokenId) => ({
+            address: positionManager as Address,
+            abi: NONFUNGIBLE_POSITION_MANAGER_ABI,
+            functionName: 'positions' as const,
+            args: [tokenId] as const,
+            chainId: effectiveChainId,
+        })),
+        query: {
+            enabled: tokenIds.length > 0 && !!positionManager,
+            staleTime: 10_000,
+        },
+    })
+    const rawPositions = useMemo<V3Position[]>(() => {
+        if (!positionData) return []
+        return positionData
+            .map((result, index) => {
+                const data = result.result as
+                    | [
+                          bigint,
+                          Address,
+                          Address,
+                          Address,
+                          number,
+                          number,
+                          number,
+                          bigint,
+                          bigint,
+                          bigint,
+                          bigint,
+                          bigint,
+                      ]
+                    | undefined
+                if (!data) return null
+                const [
+                    nonce,
+                    operator,
+                    token0,
+                    token1,
+                    fee,
+                    tickLower,
+                    tickUpper,
+                    liquidity,
+                    feeGrowthInside0LastX128,
+                    feeGrowthInside1LastX128,
+                    tokensOwed0,
+                    tokensOwed1,
+                ] = data
+                return {
+                    tokenId: tokenIds[index]!,
+                    nonce,
+                    operator,
+                    token0,
+                    token1,
+                    fee,
+                    tickLower,
+                    tickUpper,
+                    liquidity,
+                    feeGrowthInside0LastX128,
+                    feeGrowthInside1LastX128,
+                    tokensOwed0,
+                    tokensOwed1,
+                }
+            })
+            .filter((p): p is V3Position => p !== null)
+    }, [positionData, tokenIds])
+    const uniquePoolKeys = useMemo(() => {
+        const keys = new Set<string>()
+        rawPositions.forEach((p) => {
+            keys.add(`${p.token0}-${p.token1}-${p.fee}`)
+        })
+        return Array.from(keys).map((key) => {
+            const [token0, token1, fee] = key.split('-')
+            return { token0: token0 as Address, token1: token1 as Address, fee: parseInt(fee!) }
+        })
+    }, [rawPositions])
+    const {
+        data: poolAddresses,
+        isLoading: isLoadingPoolAddresses,
+        refetch: refetchPoolAddresses,
+    } = useReadContracts({
+        contracts: uniquePoolKeys.map(({ token0, token1, fee }) => ({
+            address: dexConfig?.factory as Address,
+            abi: UNISWAP_V3_FACTORY_ABI,
+            functionName: 'getPool' as const,
+            args: [token0, token1, fee] as const,
+            chainId: effectiveChainId,
+        })),
+        query: {
+            enabled: uniquePoolKeys.length > 0 && !!dexConfig,
+            staleTime: 60_000,
+        },
+    })
+    const poolAddressList = useMemo(() => {
+        if (!poolAddresses) return []
+        return poolAddresses
+            .map((r) => r.result as Address | undefined)
+            .filter((a): a is Address => !!a && a !== '0x0000000000000000000000000000000000000000')
+    }, [poolAddresses])
+    const {
+        data: poolStates,
+        isLoading: isLoadingPoolStates,
+        refetch: refetchPoolStates,
+    } = useReadContracts({
+        contracts: poolAddressList.map((poolAddress) => ({
+            address: poolAddress,
+            abi: UNISWAP_V3_POOL_ABI,
+            functionName: 'slot0' as const,
+            chainId: effectiveChainId,
+        })),
+        query: {
+            enabled: poolAddressList.length > 0,
+            staleTime: 10_000,
+        },
+    })
+    const poolStateMap = useMemo(() => {
+        const map = new Map<string, { sqrtPriceX96: bigint; tick: number }>()
+        if (!poolStates || !poolAddresses) return map
+        uniquePoolKeys.forEach((key, index) => {
+            const poolAddress = poolAddresses[index]?.result as Address | undefined
+            if (!poolAddress) return
+            const poolIndex = poolAddressList.indexOf(poolAddress)
+            if (poolIndex === -1) return
+            const slot0 = poolStates[poolIndex]?.result as
+                | [bigint, number, number, number, number, number, boolean]
+                | undefined
+            if (!slot0) return
+            const mapKey = `${key.token0}-${key.token1}-${key.fee}`
+            map.set(mapKey, { sqrtPriceX96: slot0[0], tick: slot0[1] })
+        })
+        return map
+    }, [poolStates, poolAddresses, poolAddressList, uniquePoolKeys])
+    const positions = useMemo<PositionWithTokens[]>(() => {
+        return rawPositions.map((position) => {
+            const token0Info =
+                findTokenInfo(position.token0, effectiveChainId) ??
+                createPlaceholderToken(position.token0, effectiveChainId)
+            const token1Info =
+                findTokenInfo(position.token1, effectiveChainId) ??
+                createPlaceholderToken(position.token1, effectiveChainId)
+            const poolKey = `${position.token0}-${position.token1}-${position.fee}`
+            const poolState = poolStateMap.get(poolKey)
+            let amount0 = 0n
+            let amount1 = 0n
+            let currentTick = position.tickLower // fallback
+            if (poolState) {
+                const sqrtPriceAX96 = tickToSqrtPriceX96(position.tickLower)
+                const sqrtPriceBX96 = tickToSqrtPriceX96(position.tickUpper)
+                const amounts = getAmountsForLiquidity(
+                    poolState.sqrtPriceX96,
+                    sqrtPriceAX96,
+                    sqrtPriceBX96,
+                    position.liquidity
+                )
+                amount0 = amounts.amount0
+                amount1 = amounts.amount1
+                currentTick = poolState.tick
+            }
+            const poolAddress = poolAddresses?.[
+                uniquePoolKeys.findIndex((k) => `${k.token0}-${k.token1}-${k.fee}` === poolKey)
+            ]?.result as Address | undefined
+            return {
+                ...position,
+                token0Info,
+                token1Info,
+                poolAddress:
+                    poolAddress ?? ('0x0000000000000000000000000000000000000000' as Address),
+                inRange: isInRange(currentTick, position.tickLower, position.tickUpper),
+                amount0,
+                amount1,
+                uncollectedFees0: position.tokensOwed0,
+                uncollectedFees1: position.tokensOwed1,
+            }
+        })
+    }, [rawPositions, effectiveChainId, poolStateMap, poolAddresses, uniquePoolKeys])
+    const refetch = () => {
+        refetchPositions()
+        refetchPoolAddresses()
+        refetchPoolStates()
+    }
+    return {
+        positions,
+        isLoading: isLoadingPositions || isLoadingPoolAddresses || isLoadingPoolStates,
+        refetch,
+    }
+}

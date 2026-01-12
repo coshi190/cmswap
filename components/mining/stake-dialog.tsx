@@ -20,6 +20,7 @@ import { useStakePosition } from '@/hooks/useStaking'
 import { formatTokenAmount } from '@/services/tokens'
 import { formatTimeRemaining } from '@/services/mining/incentives'
 import { toastSuccess, toastError } from '@/lib/toast'
+import { addStakedTokenId } from '@/lib/staked-positions-storage'
 import type { PositionWithTokens } from '@/types/earn'
 
 export function StakeDialog() {
@@ -66,6 +67,9 @@ export function StakeDialog() {
     useEffect(() => {
         if (isSuccess && hash && pendingTxType && hash !== processedTxHash) {
             if (pendingTxType === 'stake') {
+                if (address && selectedPosition) {
+                    addStakedTokenId(chainId, address, selectedPosition.tokenId)
+                }
                 toastSuccess('Position staked successfully!')
                 setProcessedTxHash(hash)
                 closeStakeDialog()
@@ -76,7 +80,16 @@ export function StakeDialog() {
             }
             setPendingTxType(null)
         }
-    }, [isSuccess, hash, pendingTxType, processedTxHash, closeStakeDialog])
+    }, [
+        isSuccess,
+        hash,
+        pendingTxType,
+        processedTxHash,
+        closeStakeDialog,
+        address,
+        chainId,
+        selectedPosition,
+    ])
     useEffect(() => {
         if (error) {
             toastError(error)

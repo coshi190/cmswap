@@ -8,7 +8,6 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
     DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -112,9 +111,7 @@ export function ClaimRewardsDialog() {
             <DialogContent className="max-w-md">
                 <DialogHeader>
                     <DialogTitle>Claim Rewards</DialogTitle>
-                    <DialogDescription>Claim your accumulated mining rewards.</DialogDescription>
                 </DialogHeader>
-
                 <div className="space-y-6">
                     {rewardTokens.length === 0 ? (
                         <div className="text-center text-muted-foreground py-4">
@@ -159,9 +156,6 @@ export function ClaimRewardsDialog() {
                     )}
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={closeClaimDialog}>
-                        Close
-                    </Button>
                     <Button onClick={claim} disabled={isLoading || !hasRewards}>
                         {getButtonText()}
                     </Button>

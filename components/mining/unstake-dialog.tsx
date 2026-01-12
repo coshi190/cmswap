@@ -1,13 +1,12 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useAccount } from 'wagmi'
+import { useAccount, useChainId } from 'wagmi'
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
     DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -18,9 +17,11 @@ import { usePendingRewards } from '@/hooks/useRewards'
 import { formatTokenAmount } from '@/services/tokens'
 import { formatTimeRemaining } from '@/services/mining/incentives'
 import { toastSuccess, toastError } from '@/lib/toast'
+import { removeStakedTokenId } from '@/lib/staked-positions-storage'
 
 export function UnstakeDialog() {
     const { address } = useAccount()
+    const chainId = useChainId()
     const { isUnstakeDialogOpen, closeUnstakeDialog } = useEarnStore()
     const selectedStakedPosition = useSelectedStakedPosition()
     const { position, incentive } = selectedStakedPosition ?? { position: null, incentive: null }
@@ -32,10 +33,13 @@ export function UnstakeDialog() {
         useUnstakePosition(position?.tokenId, incentive, address, true)
     useEffect(() => {
         if (isSuccess && hash) {
+            if (address && position) {
+                removeStakedTokenId(chainId, address, position.tokenId)
+            }
             toastSuccess('Position unstaked successfully!')
             closeUnstakeDialog()
         }
-    }, [isSuccess, hash, closeUnstakeDialog])
+    }, [isSuccess, hash, closeUnstakeDialog, address, chainId, position])
     useEffect(() => {
         if (error) {
             toastError(error)
@@ -55,9 +59,6 @@ export function UnstakeDialog() {
             <DialogContent className="max-w-md">
                 <DialogHeader>
                     <DialogTitle>Unstake Position</DialogTitle>
-                    <DialogDescription>
-                        Unstake your LP position and claim pending rewards.
-                    </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-6">
                     <div className="text-center">

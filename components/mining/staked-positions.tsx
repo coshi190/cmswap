@@ -7,10 +7,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import type { StakedPosition, IncentiveKey } from '@/types/earn'
-import { useUserPositions } from '@/hooks/useUserPositions'
+import { usePositionsByTokenIds } from '@/hooks/useUserPositions'
 import { useIncentives } from '@/hooks/useIncentives'
 import { useStakedPositions } from '@/hooks/useStakedPositions'
 import { usePendingRewardsMultiple } from '@/hooks/useRewards'
+import { useDepositedTokenIds } from '@/hooks/useDepositedTokenIds'
 import { useEarnStore } from '@/store/earn-store'
 import { formatTokenAmount } from '@/services/tokens'
 import { formatTimeRemaining } from '@/services/mining/incentives'
@@ -45,11 +46,15 @@ export function StakedPositions() {
     const chainId = useChainId()
     const stakerAddress = getV3StakerAddress(chainId)
     const { openUnstakeDialog, openClaimDialog } = useEarnStore()
-    const { positions, isLoading: isLoadingPositions } = useUserPositions(address, chainId)
+    const { tokenIds, isLoading: isLoadingTokenIds } = useDepositedTokenIds(address)
+    const { positions: depositedPositions, isLoading: isLoadingPositions } = usePositionsByTokenIds(
+        tokenIds,
+        chainId
+    )
     const incentiveKeys = useMemo(() => KNOWN_INCENTIVES[chainId] ?? [], [chainId])
     const { incentives, isLoading: isLoadingIncentives } = useIncentives(incentiveKeys)
     const { stakedPositions, isLoading: isLoadingStaked } = useStakedPositions(
-        positions,
+        depositedPositions,
         incentives,
         address
     )
@@ -82,7 +87,11 @@ export function StakedPositions() {
         )
     }
     const isLoading =
-        isLoadingPositions || isLoadingIncentives || isLoadingStaked || isLoadingRewards
+        isLoadingTokenIds ||
+        isLoadingPositions ||
+        isLoadingIncentives ||
+        isLoadingStaked ||
+        isLoadingRewards
     if (isLoading) {
         return (
             <Card>
@@ -148,8 +157,8 @@ function StakedPositionCard({ stakedPosition, onUnstake }: StakedPositionCardPro
     const timeRemaining = formatTimeRemaining(incentive.endTime)
     const formattedRewards = formatTokenAmount(pendingRewards, incentive.rewardTokenInfo.decimals)
     return (
-        <Card className="hover:border-primary/50 transition-colors">
-            <CardContent className="pt-4">
+        <Card>
+            <CardContent className="pt-6">
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
