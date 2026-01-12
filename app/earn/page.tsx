@@ -12,13 +12,7 @@ import { RemoveLiquidityDialog } from '@/components/positions/remove-liquidity-d
 import { CollectFeesDialog } from '@/components/positions/collect-fees-dialog'
 import { PositionDetailsModal } from '@/components/positions/position-details-modal'
 import { IncreaseLiquidityDialog } from '@/components/positions/increase-liquidity-dialog'
-import {
-    MiningPools,
-    StakedPositions,
-    StakeDialog,
-    UnstakeDialog,
-    ClaimRewardsDialog,
-} from '@/components/mining'
+import { MiningPools, StakedPositions, StakeDialog, UnstakeDialog } from '@/components/mining'
 import { useEarnStore, useActiveTab } from '@/store/earn-store'
 import { getV3Config } from '@/lib/dex-config'
 import { ConnectButton } from '@/components/web3/connect-button'
@@ -88,16 +82,13 @@ function EarnContent() {
                         <StakedPositions />
                     </TabsContent>
                 </Tabs>
-                {/* Liquidity Dialogs */}
                 <AddLiquidityDialog />
                 <RemoveLiquidityDialog />
                 <CollectFeesDialog />
                 <PositionDetailsModal />
                 <IncreaseLiquidityDialog />
-                {/* Mining Dialogs */}
                 <StakeDialog />
                 <UnstakeDialog />
-                <ClaimRewardsDialog />
             </div>
         </div>
     )

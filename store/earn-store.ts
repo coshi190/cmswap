@@ -38,7 +38,6 @@ interface EarnStore {
     selectedStakedPosition: StakedPosition | null
     isStakeDialogOpen: boolean
     isUnstakeDialogOpen: boolean
-    isClaimDialogOpen: boolean
 
     // Settings (persisted)
     settings: EarnSettings
@@ -74,8 +73,6 @@ interface EarnStore {
     closeStakeDialog: () => void
     openUnstakeDialog: (stakedPosition: StakedPosition) => void
     closeUnstakeDialog: () => void
-    openClaimDialog: () => void
-    closeClaimDialog: () => void
 
     // Settings
     setDefaultSlippage: (slippage: number) => void
@@ -106,7 +103,6 @@ const initialState = {
     selectedStakedPosition: null,
     isStakeDialogOpen: false,
     isUnstakeDialogOpen: false,
-    isClaimDialogOpen: false,
     activeTab: 'pools' as const,
 }
 
@@ -285,16 +281,6 @@ export const useEarnStore = create<EarnStore>()(
                     set({
                         isUnstakeDialogOpen: false,
                         selectedStakedPosition: null,
-                    }),
-
-                openClaimDialog: () =>
-                    set({
-                        isClaimDialogOpen: true,
-                    }),
-
-                closeClaimDialog: () =>
-                    set({
-                        isClaimDialogOpen: false,
                     }),
 
                 // Settings

@@ -45,7 +45,7 @@ export function StakedPositions() {
     const { address } = useAccount()
     const chainId = useChainId()
     const stakerAddress = getV3StakerAddress(chainId)
-    const { openUnstakeDialog, openClaimDialog } = useEarnStore()
+    const { openUnstakeDialog } = useEarnStore()
     const { tokenIds, isLoading: isLoadingTokenIds } = useDepositedTokenIds(address)
     const { positions: depositedPositions, isLoading: isLoadingPositions } = usePositionsByTokenIds(
         tokenIds,
@@ -122,17 +122,12 @@ export function StakedPositions() {
     }
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-lg font-semibold">My Staked Positions</h2>
-                    <p className="text-sm text-muted-foreground">
-                        {enrichedPositions.length} staked position
-                        {enrichedPositions.length !== 1 ? 's' : ''}
-                    </p>
-                </div>
-                <Button variant="outline" size="sm" onClick={openClaimDialog}>
-                    Claim All Rewards
-                </Button>
+            <div>
+                <h2 className="text-lg font-semibold">My Staked Positions</h2>
+                <p className="text-sm text-muted-foreground">
+                    {enrichedPositions.length} staked position
+                    {enrichedPositions.length !== 1 ? 's' : ''}
+                </p>
             </div>
             <div className="space-y-3">
                 {enrichedPositions.map((sp) => (
